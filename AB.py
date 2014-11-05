@@ -110,10 +110,7 @@ runInfo = psychopy.info.RunTimeInfo(
         verbose=True, ## True means report on everything 
         userProcsDetailed=True,  ## if verbose and userProcsDetailed, return (command, process-ID) of the user's processes
         )
-
-#"print runInfo" will give you the same as "print str(runInfo)". This format is intended to be useful 
-#for writing to a data file in a human readable form:"""
-print(runInfo)
+#print(runInfo)
 logging.info(runInfo)
 
 #check screen refresh is what assuming it is ########################################################################
@@ -439,8 +436,10 @@ def  oneFrameOfStim( n,cue,letterSequence,cueDurFrames,letterDurFrames,ISIframes
   return True 
 # #######End of function definition that displays the stimuli!!!! #####################################
 
-def collectResponses(task,passThisTrial,responses,responsesAutopilot,expStop,responseDebug=False): 
+def collectResponses(task,numRespsWanted,responseDebug=False): 
     event.clearEvents() #clear the keyboard buffer
+    expStop = False
+    passThisTrial = False
     respStr = ''
     responses=[]
     numResponses = 0
@@ -480,7 +479,7 @@ def collectResponses(task,passThisTrial,responses,responsesAutopilot,expStop,res
     responsesAutopilot = np.array(   numRespsWanted*list([('A')])        )
     responses=np.array( responses )
     #print 'responses=', responses,' responsesAutopilot=', responsesAutopilot #debugOFF
-    return passThisTrial,responses,responsesAutopilot,expStop
+    return expStop,passThisTrial,responses,responsesAutopilot
 # #######End of function definition that collects responses!!!! #####################################
 #############################################################################################################################
 
@@ -511,16 +510,50 @@ for i in range(0,26):
 noiseFieldWidthDeg=ltrHeight *1.0
 noiseFieldWidthPix = int( round( noiseFieldWidthDeg*pixelperdegree ) )
 
+def timingCheckAndLog(ts):
+    #check for timing problems and log them
+    #ts is a list of the times of the clock after each frame
+    interframeIntervs = np.diff(ts)*1000
+    #print '   interframe intervs were ',around(interframeIntervs,1) #DEBUGOFF
+    frameTimeTolerance=.3 #proportion longer than refreshRate that will not count as a miss
+    longFrameLimit = np.round(1000/refreshRate*(1.0+frameTimeTolerance),2)
+    idxsInterframeLong = np.where( interframeIntervs > longFrameLimit ) [0] #frames that exceeded 150% of expected duration
+    numCasesInterframeLong = len( idxsInterframeLong )
+    if numCasesInterframeLong >0 and (not demo):
+       longFramesStr =  'ERROR,'+str(numCasesInterframeLong)+' frames were longer than '+str(longFrameLimit)+' ms'
+       if demo: 
+         longFramesStr += 'not printing them all because in demo mode'
+       else:
+           longFramesStr += ' apparently screen refreshes skipped, interframe durs were:'+\
+                    str( np.around(  interframeIntervs[idxsInterframeLong] ,1  ) )+ ' and was these frames: '+ str(idxsInterframeLong)
+       if longFramesStr != None:
+                logging.error( 'trialnum='+str(trialN)+' '+longFramesStr )
+                if not demo:
+                    flankingAlso=list()
+                    for idx in idxsInterframeLong: #also print timing of one before and one after long frame
+                        if idx-1>=0:
+                            flankingAlso.append(idx-1)
+                        else: flankingAlso.append(np.NaN)
+                        flankingAlso.append(idx)
+                        if idx+1<len(interframeIntervs):  flankingAlso.append(idx+1)
+                        else: flankingAlso.append(np.NaN)
+                    flankingAlso = np.array(flankingAlso)
+                    flankingAlso = flankingAlso[np.negative(np.isnan(flankingAlso))]  #remove nan values
+                    flankingAlso = flankingAlso.astype(np.integer) #cast as integers, so can use as subscripts
+                    logging.info( 'flankers also='+str( np.around( interframeIntervs[flankingAlso], 1) )  ) #because this is not an essential error message, as previous one already indicates error
+                      #As INFO, at least it won't fill up the console when console set to WARNING or higher
+    return numCasesInterframeLong
+    #end timing check
+    
 trialClock = core.Clock()
 numTrialsCorrect = 0; 
 numTrialsApproxCorrect = 0;
 numTrialsEachCorrect= np.zeros( numRespsWanted )
 numTrialsEachApproxCorrect= np.zeros( numRespsWanted )
-        
-def do_RSVP_trial(cue1pos, cue2lag, proportnNoise,trialN,expStop):
+
+def do_RSVP_stim(cue1pos, cue2lag, proportnNoise,trialN):
     #relies on global variables:
     #   logging, 
-    global numTrialsCorrect, numTrialsApproxCorrect, numTrialsEachCorrect, numTrialsEachApproxCorrect
     #
     cuesPos = [] #will contain the positions of all the cues (targets)
     cuesPos.append(cue1pos)
@@ -530,7 +563,7 @@ def do_RSVP_trial(cue1pos, cue2lag, proportnNoise,trialN,expStop):
     letterSequence = np.arange(0,26)
     np.random.shuffle(letterSequence)
     correctAnswers = np.array( letterSequence[cuesPos] )
-    
+    print ('first several lines done of do_RSVP_stim') #debugON
     noise = None; allFieldCoords=None; numNoiseDots=0
     if proportnNoise > 0: #generating noise is time-consuming, so only do it once per trial. Then shuffle noise coordinates for each letter
         (noise,allFieldCoords,numNoiseDots) = createNoiseArray(proportnNoise,noiseFieldWidthPix) 
@@ -567,45 +600,17 @@ def do_RSVP_trial(cue1pos, cue2lag, proportnNoise,trialN,expStop):
         t=trialClock.getTime()-t0;  ts.append(t);
     #end of big stimulus loop
     myWin.setRecordFrameIntervals(False);
-    #check for timing problems
-    interframeIntervs = np.diff(ts)*1000
-    #print '   interframe intervs were ',around(interframeIntervs,1) #DEBUGOFF
-    frameTimeTolerance=.3 #proportion longer than refreshRate that will not count as a miss
-    longFrameLimit = np.round(1000/refreshRate*(1.0+frameTimeTolerance),2)
-    idxsInterframeLong = np.where( interframeIntervs > longFrameLimit ) [0] #frames that exceeded 150% of expected duration
-    numCasesInterframeLong = len( idxsInterframeLong )
-    if numCasesInterframeLong >0 and (not demo):
-       longFramesStr =  'ERROR,'+str(numCasesInterframeLong)+' frames were longer than '+str(longFrameLimit)+' ms'
-       if demo: 
-         longFramesStr += 'not printing them all because in demo mode'
-       else:
-           longFramesStr += ' apparently screen refreshes skipped, interframe durs were:'+\
-                    str( np.around(  interframeIntervs[idxsInterframeLong] ,1  ) )+ ' and was these frames: '+ str(idxsInterframeLong)
-       if longFramesStr != None:
-                logging.error( 'trialnum='+str(trialN)+' '+longFramesStr )
-                if not demo:
-                    flankingAlso=list()
-                    for idx in idxsInterframeLong: #also print timing of one before and one after long frame
-                        if idx-1>=0:  flankingAlso.append(idx-1)
-                        else: flankingAlso.append(np.NaN)
-                        flankingAlso.append(idx)
-                        if idx+1<len(interframeIntervs):  flankingAlso.append(idx+1)
-                        else: flankingAlso.append(np.NaN)
-                    flankingAlso = np.array(flankingAlso)
-                    flankingAlso = flankingAlso[np.negative(np.isnan(flankingAlso))]  #remove nan values
-                    flankingAlso=flankingAlso.astype(np.integer) #cast as integers, so can use as subscripts
-                    logging.info( 'flankers also='+str( np.around( interframeIntervs[flankingAlso], 1) )  ) #because this is not an essential error message, as previous one already indicates error
-                      #As INFO, at least it won't fill up the console when console set to WARNING or higher
-    #end timing check
+
     if task=='T1':
         respPromptText.setText('Which letter was circled?',log=False)
     elif task=='T1T2':
         respPromptText.setText('Which two letters were circled?',log=False)
     else: respPromptText.setText('Error: unexpected task',log=False)
     postCueNumBlobsAway=-999 #doesn't apply to non-tracking and click tracking task
-    return task, passThisTrial
-
-def handleAndScoreResponse(task):
+    print('About to return from do_RSVP_stim') #debugON
+    return letterSequence,cuesPos,correctAnswers, ts  
+    
+def handleAndScoreResponse(expStop,passThisTrial,responses,responsesAutopilot,task,letterSequence,cuesPos,correctAnswers):
     #Handle response, calculate whether correct, ########################################
     if expStop:
         responses =np.array([-999])  #because otherwise responses can't be turned into array if have partial response
@@ -639,7 +644,7 @@ def handleAndScoreResponse(task):
             responsePosRelative[i] = posOfResponse[i] - cuesPos[i]
             eachApproxCorrect[i] +=   abs(responsePosRelative[i]) <= 3 #Vul efficacy measure of getting it right to within plus/minus 
         #header start      'trialnum\tsubject\ttask\t'
-        print(trialN,'\t',subject,'\t',task,'\t', end='', file=dataFile)
+        print(subject,'\t',task,'\t', end='', file=dataFile)
         for i in range(len(cuesPos)):
             #header continued.  answerPos0, answer0, response0, correct0, responsePosRelative0
             print(cuesPos[i],'\t', end='', file=dataFile)
@@ -648,18 +653,15 @@ def handleAndScoreResponse(task):
             print(responses[i], '\t', end='', file=dataFile) #response0
             print(eachCorrect[i] , '\t', end='',file=dataFile)   #correct0
             print(responsePosRelative[i], '\t', end='',file=dataFile) #responsePosRelative0
-        #timingBlips
-        print(numCasesInterframeLong,file=dataFile)
+
         print('Have scored responses.') #debugON
 
         correct = eachCorrect.all() 
-        numTrialsCorrect += correct #so count -1 as 0
-        numTrialsApproxCorrect += eachApproxCorrect.all()
-        T1approxCorrect = eachApproxCorrect[0];
-        numTrialsEachCorrect += eachCorrect
-        numTrialsEachApproxCorrect += eachApproxCorrect
+        T1approxCorrect = eachApproxCorrect[0]
+
         print('Got to last line of do_RSVP_trial') #debugON
-        return correct,T1approxCorrect,passThisTrial,expStop
+        return correct,eachApproxCorrect,T1approxCorrect,passThisTrial,expStop
+        #end handleAndScoreResponses
 
 def play_high_tone_correct_low_incorrect(correct, passThisTrial=False):
     highA = sound.Sound('G',octave=5, sampleRate=6000, secs=.3, bits=8)
@@ -748,13 +750,19 @@ while (not staircase.finished) and expStop==False: #staircase.thisTrialN < stair
             break #break out of the trials loop
     print('staircaseTrialN=',staircaseTrialN)
     
-    correct,T1approxCorrect,passThisTrial,expStop = do_RSVP_trial(cue1pos, cue2lag, percentNoise/100.,staircaseTrialN,expStop)
-
+    letterSequence,cuesPos,correctAnswers, ts  = do_RSVP_stim(cue1pos, cue2lag, percentNoise/100.,staircaseTrialN)
+    numCasesInterframeLong = timingCheckAndLog(ts)
+    
     responseDebug=False; responses = list(); responsesAutopilot = list();
-    passThisTrial,responses,responsesAutopilot,expStop = \
-                  collectResponses(task)  #collect responses!!!!!!!!!
+    expStop,passThisTrial,responses,responsesAutopilot = \
+                collectResponses(task,numRespsWanted,responseDebug=True)
+    print(staircaseTrialN,'\t', file=dataFile) #first thing printed on each line of dataFile
+    correct,eachApproxCorrect,T1approxCorrect,passThisTrial,expStop = (
+            handleAndScoreResponse(expStop,passThisTrial,responses,responsesAutopilot,task,letterSequence,cuesPos,correctAnswers) )
+    print('staircase\t', numCasesInterframeLong, file=dataFile) #timingBlips, last thing recorded on each line of dataFile
     core.wait(.06)
-    if feedback: play_high_tone_correct_low_incorrect(correct, passThisTrial=False)
+    if feedback: 
+        play_high_tone_correct_low_incorrect(correct, passThisTrial=False)
     print('expStop=',expStop,'   T1approxCorrect=',T1approxCorrect) #debugON
     corrEachTrial.append(T1approxCorrect)
     if mainStaircaseGoing: 
@@ -776,11 +784,22 @@ while nDoneAfterStaircase < trials.nTotal and expStop==False:
     thisTrial = trials.next() #get a proper (non-staircase) trial
     cue1pos = thisTrial['cue1pos']
     cue2lag = thisTrial['cue2lag']
-    correct,T1approxCorrect,passThisTrial,expStop = do_RSVP_trial(cue1pos, cue2lag, percentNoise/100., nDoneAfterStaircase,expStop)
-    responseDebug=False
-    responses = list(); responsesAutopilot = list(); passThisTrial=False
-    passThisTrial,responses,responsesAutopilot,expStop = \
-                  collectResponses(task,passThisTrial,responses,responsesAutopilot,expStop,responseDebug)  #collect responses!!!!!!!!!
+    letterSequence,cuesPos,correctAnswers, ts  = do_RSVP_stim(cue1pos, cue2lag, percentNoise/100.,staircaseTrialN)
+    numCasesInterframeLong = timingCheckAndLog(ts)
+    
+    responseDebug=False; responses = list(); responsesAutopilot = list();
+    expStop,passThisTrial,responses,responsesAutopilot = \
+                collectResponses(task,numRespsWanted,responseDebug=True)
+    print(staircaseTrialN,'\t', file=dataFile) #first thing printed on each line of dataFile
+    correct,eachApproxCorrect,T1approxCorrect,passThisTrial,expStop = (
+            handleAndScoreResponse(expStop,passThisTrial,responses,responsesAutopilot,task,letterSequence,cuesPos,correctAnswers) )
+    print('afterStaircase\t', numCasesInterframeLong, file=dataFile) #timingBlips, last thing recorded on each line of dataFile
+
+    numTrialsCorrect += correct #so count -1 as 0
+    numTrialsApproxCorrect += eachApproxCorrect.all()
+    numTrialsEachCorrect += eachCorrect
+    numTrialsEachApproxCorrect += eachApproxCorrect
+        
     if exportImages:  #catches one frame of response
          myWin.getMovieFrame() #I cant explain why another getMovieFrame, and core.wait is needed
          framesSaved +=1; core.wait(.1)
