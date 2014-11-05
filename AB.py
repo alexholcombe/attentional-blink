@@ -563,7 +563,6 @@ def do_RSVP_stim(cue1pos, cue2lag, proportnNoise,trialN):
     letterSequence = np.arange(0,26)
     np.random.shuffle(letterSequence)
     correctAnswers = np.array( letterSequence[cuesPos] )
-    print ('first several lines done of do_RSVP_stim') #debugON
     noise = None; allFieldCoords=None; numNoiseDots=0
     if proportnNoise > 0: #generating noise is time-consuming, so only do it once per trial. Then shuffle noise coordinates for each letter
         (noise,allFieldCoords,numNoiseDots) = createNoiseArray(proportnNoise,noiseFieldWidthPix) 
@@ -607,7 +606,6 @@ def do_RSVP_stim(cue1pos, cue2lag, proportnNoise,trialN):
         respPromptText.setText('Which two letters were circled?',log=False)
     else: respPromptText.setText('Error: unexpected task',log=False)
     postCueNumBlobsAway=-999 #doesn't apply to non-tracking and click tracking task
-    print('About to return from do_RSVP_stim') #debugON
     return letterSequence,cuesPos,correctAnswers, ts  
     
 def handleAndScoreResponse(expStop,passThisTrial,responses,responsesAutopilot,task,letterSequence,cuesPos,correctAnswers):
@@ -622,8 +620,7 @@ def handleAndScoreResponse(expStop,passThisTrial,responses,responsesAutopilot,ta
     eachApproxCorrect = np.zeros( len(correctAnswers) )
     posOfResponse = np.zeros( len(cuesPos) )
     responsePosRelative = np.zeros( len(cuesPos) )
-    print('About to score responses') #debugON
-
+    print('initialized things in scoreResponse, expStop=',expStop) #debugON
     if expStop:
         pass
     else:
@@ -653,15 +650,13 @@ def handleAndScoreResponse(expStop,passThisTrial,responses,responsesAutopilot,ta
             print(responses[i], '\t', end='', file=dataFile) #response0
             print(eachCorrect[i] , '\t', end='',file=dataFile)   #correct0
             print(responsePosRelative[i], '\t', end='',file=dataFile) #responsePosRelative0
-
         print('Have scored responses.') #debugON
 
         correct = eachCorrect.all() 
         T1approxCorrect = eachApproxCorrect[0]
 
-        print('Got to last line of do_RSVP_trial') #debugON
-        return correct,eachApproxCorrect,T1approxCorrect,passThisTrial,expStop
-        #end handleAndScoreResponses
+    return correct,eachApproxCorrect,T1approxCorrect,passThisTrial,expStop
+    #end handleAndScoreResponses
 
 def play_high_tone_correct_low_incorrect(correct, passThisTrial=False):
     highA = sound.Sound('G',octave=5, sampleRate=6000, secs=.3, bits=8)
@@ -759,6 +754,7 @@ while (not staircase.finished) and expStop==False: #staircase.thisTrialN < stair
     print(staircaseTrialN,'\t', file=dataFile) #first thing printed on each line of dataFile
     correct,eachApproxCorrect,T1approxCorrect,passThisTrial,expStop = (
             handleAndScoreResponse(expStop,passThisTrial,responses,responsesAutopilot,task,letterSequence,cuesPos,correctAnswers) )
+    print('Scored response. expStop=',expStop) #debugON
     print('staircase\t', numCasesInterframeLong, file=dataFile) #timingBlips, last thing recorded on each line of dataFile
     core.wait(.06)
     if feedback: 
@@ -776,7 +772,6 @@ printStaircaseStuff(staircase, briefTrialUpdate=False, alsoLog=True)
 msg='Staircase estimate of threshold = ' + 100- np.around(staircase.quantile,3) + ' with sd =', staircase.sd()
 logging.info(msg); print(msg)
 
-expStop = False
 msg='Starting main (non-staircase) part of experiment'
 logging.info(msg); print(msg)
 nDoneAfterStaircase =0
