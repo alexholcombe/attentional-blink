@@ -603,18 +603,9 @@ def do_RSVP_trial(cue1pos, cue2lag, proportnNoise,trialN,expStop):
         respPromptText.setText('Which two letters were circled?',log=False)
     else: respPromptText.setText('Error: unexpected task',log=False)
     postCueNumBlobsAway=-999 #doesn't apply to non-tracking and click tracking task
- 
-    responseDebug=False
-    responses = list(); responsesAutopilot = list(); passThisTrial=False
-    passThisTrial,responses,responsesAutopilot,expStop = \
-                  collectResponses(task,passThisTrial,responses,responsesAutopilot,expStop,responseDebug)  #collect responses!!!!!!!!!
-    #############################################################################################
-    if exportImages:  #catches one frame of response
-         myWin.getMovieFrame() #I cant explain why another getMovieFrame, and core.wait is needed
-         framesSaved +=1; core.wait(.1)
-         myWin.saveMovieFrames('exported/frames.mov')  
-         expStop=True
-    core.wait(.1)
+    return task, passThisTrial
+
+def handleAndScoreResponse(task):
     #Handle response, calculate whether correct, ########################################
     if expStop:
         responses =np.array([-999])  #because otherwise responses can't be turned into array if have partial response
@@ -758,6 +749,11 @@ while (not staircase.finished) and expStop==False: #staircase.thisTrialN < stair
     print('staircaseTrialN=',staircaseTrialN)
     
     correct,T1approxCorrect,passThisTrial,expStop = do_RSVP_trial(cue1pos, cue2lag, percentNoise/100.,staircaseTrialN,expStop)
+
+    responseDebug=False; responses = list(); responsesAutopilot = list();
+    passThisTrial,responses,responsesAutopilot,expStop = \
+                  collectResponses(task)  #collect responses!!!!!!!!!
+    core.wait(.06)
     if feedback: play_high_tone_correct_low_incorrect(correct, passThisTrial=False)
     print('expStop=',expStop,'   T1approxCorrect=',T1approxCorrect) #debugON
     corrEachTrial.append(T1approxCorrect)
@@ -781,6 +777,16 @@ while nDoneAfterStaircase < trials.nTotal and expStop==False:
     cue1pos = thisTrial['cue1pos']
     cue2lag = thisTrial['cue2lag']
     correct,T1approxCorrect,passThisTrial,expStop = do_RSVP_trial(cue1pos, cue2lag, percentNoise/100., nDoneAfterStaircase,expStop)
+    responseDebug=False
+    responses = list(); responsesAutopilot = list(); passThisTrial=False
+    passThisTrial,responses,responsesAutopilot,expStop = \
+                  collectResponses(task,passThisTrial,responses,responsesAutopilot,expStop,responseDebug)  #collect responses!!!!!!!!!
+    if exportImages:  #catches one frame of response
+         myWin.getMovieFrame() #I cant explain why another getMovieFrame, and core.wait is needed
+         framesSaved +=1; core.wait(.1)
+         myWin.saveMovieFrames('exported/frames.mov')  
+         expStop=True
+    core.wait(.1)
     if feedback: play_high_tone_correct_low_incorrect(correct, passThisTrial=False)
     if not expStop:
         nDoneAfterStaircase+=1
