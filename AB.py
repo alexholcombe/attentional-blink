@@ -41,8 +41,8 @@ autoLogging=False
 if demo:
     refreshRate = 60.;  #100
 
-staircaseTrials = 10
-nEasyStaircaseStarterTrials = 3;
+staircaseTrials = 4
+nEasyStaircaseStarterTrials = 3
 easyStaircaseStarterNoise = np.array([2, 2, 5, 5, 10, 80, 80, 80])#,30, 80, 40, 90, 30, 70, 30, 40, 80, 20, 20, 50 ]
 
 bgColor = [-.7,-.7,-.7] # [-1,-1,-1]
@@ -303,7 +303,7 @@ def printStaircaseStuff(staircase, briefTrialUpdate, alsoLog=False):
     if alsoLog:     logging.info(msg)
     
     if staircase.stepType == 'log':
-        msg = 'staircase.intensities (these are log intensities)=['
+        msg = '\tstaircase.intensities (these are log intensities)=['
         for i in range( len(staircase.intensities) ):
             msg += '{:.2f} '.format(staircase.intensities[i])
             #print('{:.2f} '.format(staircase.intensities[i]), end='') #I cant figure out a simpler way to prevent scientific notation
@@ -322,7 +322,7 @@ def printStaircaseStuff(staircase, briefTrialUpdate, alsoLog=False):
         
     if type(staircase) is data.StairHandler:
         numReversals = len(staircase.reversalIntensities)
-        msg= 'number of reversals=' + str(numReversals) + ']n'
+        msg= 'staircase number of reversals=' + str(numReversals) + '] '
         msg+= 'reversal noiseProportions=' + str( 1- np.array(staircase.reversalIntensities) )
         print(msg)
         if alsoLog:     logging.info(msg)
@@ -335,13 +335,13 @@ def printStaircaseStuff(staircase, briefTrialUpdate, alsoLog=False):
     elif type(staircase) is data.QuestHandler:
             #some of below are private initialization variables I'm not really supposed to access
             if not briefTrialUpdate:
-                msg= ('pThreshold (proportion correct for which trying to zero in on the corresponding parameter value) =' +
+                msg= ('\tpThreshold (proportion correct for which trying to zero in on the corresponding parameter value) =' +
                                str(staircase._quest.pThreshold) + '\n')
-                msg+= ('stopInterval (min 5-95% confidence interval required for  thresh  before stopping. If both this and nTrials is specified, whichever happens first)='+
+                msg+= ('\tstopInterval (min 5-95% confidence interval required for  thresh  before stopping. If both this and nTrials is specified, whichever happens first)='+
                                str(staircase.stopInterval) + '\n')
-                msg+= 'stepType=' + str(staircase.stepType) + '\n'
-                msg+= 'minVal=' + str(staircase.minVal) + '  maxVal=' + str(staircase.maxVal) + '\n'
-                msg+= 'nTrials=' + str(staircase.nTrials)
+                msg+= '\tstepType=' + str(staircase.stepType) + '\n'
+                msg+= '\tminVal=' + str(staircase.minVal) + '  maxVal=' + str(staircase.maxVal) + '\n'
+                msg+= '\tnTrials=' + str(staircase.nTrials)
                 print(msg)
                 if alsoLog:     logging.info(msg)
 
@@ -400,7 +400,7 @@ for i in range(numRespsWanted):
    dataFile.write('response'+str(i)+'\t')
    dataFile.write('correct'+str(i)+'\t')
    dataFile.write('responsePosRelative'+str(i)+'\t')
-print('timingBlips',file=dataFile)
+print('experimentPhase\ttimingBlips',file=dataFile)
 #end of header
 
 def  oneFrameOfStim( n,cue,letterSequence,cueDurFrames,letterDurFrames,ISIframes,cuesPos,lettersDrawObjects,
@@ -608,54 +608,45 @@ def do_RSVP_stim(cue1pos, cue2lag, proportnNoise,trialN):
     postCueNumBlobsAway=-999 #doesn't apply to non-tracking and click tracking task
     return letterSequence,cuesPos,correctAnswers, ts  
     
-def handleAndScoreResponse(expStop,passThisTrial,responses,responsesAutopilot,task,letterSequence,cuesPos,correctAnswers):
+def handleAndScoreResponse(passThisTrial,responses,responsesAutopilot,task,letterSequence,cuesPos,correctAnswers):
     #Handle response, calculate whether correct, ########################################
-    if expStop:
-        responses =np.array([-999])  #because otherwise responses can't be turned into array if have partial response
-        correct=0
     if autopilot or passThisTrial:
-        responses = responsesAutopilot;  #print('assigning responses to responsesAutopilot, = ', responsesAutopilot)
+        responses = responsesAutopilot
     
     eachCorrect = np.zeros( len(correctAnswers) )
     eachApproxCorrect = np.zeros( len(correctAnswers) )
     posOfResponse = np.zeros( len(cuesPos) )
     responsePosRelative = np.zeros( len(cuesPos) )
-    print('initialized things in scoreResponse, expStop=',expStop) #debugON
-    if expStop:
-        pass
-    else:
-        for i in range(len(cuesPos)): #score response to each cue
-            if correctAnswers[i] == letterToNumber( responses[i] ):
-                eachCorrect[i] = 1
-            posThisResponse= np.where( letterToNumber(responses[i])==letterSequence )
-            #print 'responses=',responses,'posThisResponse raw=',posThisResponse, ' letterSequence=',letterSequence #debugOFF
-            posThisResponse= posThisResponse[0] #list with potentially two entries, want first which will be array of places where the reponse was found in the letter sequence
-            if len(posThisResponse) > 1:
-                logging.error('Expected response to have occurred in only one position in stream')        
-            if np.alen(posThisResponse)==0: #response not found in letter sequence
-                posThisResponse = -999
-                logging.warn('Response was not present in the stimulus stream')
-            else: 
-                posThisResponse = posThisResponse[0]
-            posOfResponse[i]= posThisResponse
-            responsePosRelative[i] = posOfResponse[i] - cuesPos[i]
-            eachApproxCorrect[i] +=   abs(responsePosRelative[i]) <= 3 #Vul efficacy measure of getting it right to within plus/minus 
-        #header start      'trialnum\tsubject\ttask\t'
-        print(subject,'\t',task,'\t', end='', file=dataFile)
-        for i in range(len(cuesPos)):
-            #header continued.  answerPos0, answer0, response0, correct0, responsePosRelative0
-            print(cuesPos[i],'\t', end='', file=dataFile)
-            answerCharacter = numberToLetter( letterSequence [cuesPos[i] ] )
-            print(answerCharacter, '\t', end='', file=dataFile) #answer0
-            print(responses[i], '\t', end='', file=dataFile) #response0
-            print(eachCorrect[i] , '\t', end='',file=dataFile)   #correct0
-            print(responsePosRelative[i], '\t', end='',file=dataFile) #responsePosRelative0
-        print('Have scored responses.') #debugON
+    for i in range(len(cuesPos)): #score response to each cue
+        if correctAnswers[i] == letterToNumber( responses[i] ):
+            eachCorrect[i] = 1
+        posThisResponse= np.where( letterToNumber(responses[i])==letterSequence )
+        #print 'responses=',responses,'posThisResponse raw=',posThisResponse, ' letterSequence=',letterSequence #debugOFF
+        posThisResponse= posThisResponse[0] #list with potentially two entries, want first which will be array of places where the reponse was found in the letter sequence
+        if len(posThisResponse) > 1:
+            logging.error('Expected response to have occurred in only one position in stream')
+        if np.alen(posThisResponse)==0: #response not found in letter sequence
+            posThisResponse = -999
+            logging.warn('Response was not present in the stimulus stream')
+        else: 
+            posThisResponse = posThisResponse[0]
+        posOfResponse[i]= posThisResponse
+        responsePosRelative[i] = posOfResponse[i] - cuesPos[i]
+        eachApproxCorrect[i] +=   abs(responsePosRelative[i]) <= 3 #Vul efficacy measure of getting it right to within plus/minus 
+    #header start      'trialnum\tsubject\ttask\t'
+    print(subject,'\t',task,'\t', end='', file=dataFile)
+    for i in range(len(cuesPos)): #print response stuff to dataFile
+        #header was answerPos0, answer0, response0, correct0, responsePosRelative0
+        print(cuesPos[i],'\t', end='', file=dataFile)
+        answerCharacter = numberToLetter( letterSequence [cuesPos[i] ] )
+        print(answerCharacter, '\t', end='', file=dataFile) #answer0
+        print(responses[i], '\t', end='', file=dataFile) #response0
+        print(eachCorrect[i] , '\t', end='',file=dataFile)   #correct0
+        print(responsePosRelative[i], '\t', end='',file=dataFile) #responsePosRelative0
 
         correct = eachCorrect.all() 
         T1approxCorrect = eachApproxCorrect[0]
-
-    return correct,eachApproxCorrect,T1approxCorrect,passThisTrial,expStop
+    return correct,eachCorrect,eachApproxCorrect,T1approxCorrect,passThisTrial,expStop
     #end handleAndScoreResponses
 
 def play_high_tone_correct_low_incorrect(correct, passThisTrial=False):
@@ -751,31 +742,35 @@ while (not staircase.finished) and expStop==False: #staircase.thisTrialN < stair
     responseDebug=False; responses = list(); responsesAutopilot = list();
     expStop,passThisTrial,responses,responsesAutopilot = \
                 collectResponses(task,numRespsWanted,responseDebug=True)
-    print(staircaseTrialN,'\t', file=dataFile) #first thing printed on each line of dataFile
-    correct,eachApproxCorrect,T1approxCorrect,passThisTrial,expStop = (
-            handleAndScoreResponse(expStop,passThisTrial,responses,responsesAutopilot,task,letterSequence,cuesPos,correctAnswers) )
-    print('Scored response. expStop=',expStop) #debugON
-    print('staircase\t', numCasesInterframeLong, file=dataFile) #timingBlips, last thing recorded on each line of dataFile
-    core.wait(.06)
-    if feedback: 
-        play_high_tone_correct_low_incorrect(correct, passThisTrial=False)
-    print('expStop=',expStop,'   T1approxCorrect=',T1approxCorrect) #debugON
-    corrEachTrial.append(T1approxCorrect)
-    if mainStaircaseGoing: 
-        staircase.addResponse(T1approxCorrect, intensity = 100-percentNoise) #Add a 1 or 0 to signify a correct/detected or incorrect/missed trial
+    if not expStop:
+        print(staircaseTrialN,'\t', file=dataFile) #first thing printed on each line of dataFile
+        correct,eachCorrect,eachApproxCorrect,T1approxCorrect,passThisTrial,expStop = (
+                handleAndScoreResponse(passThisTrial,responses,responsesAutopilot,task,letterSequence,cuesPos,correctAnswers) )
+        print('Scored response. expStop=',expStop) #debugON
+        print('staircase\t', numCasesInterframeLong, file=dataFile) #timingBlips, last thing recorded on each line of dataFile
+        core.wait(.06)
+        if feedback: 
+            play_high_tone_correct_low_incorrect(correct, passThisTrial=False)
+        print('expStop=',expStop,'   T1approxCorrect=',T1approxCorrect) #debugON
+        corrEachTrial.append(T1approxCorrect)
+        if mainStaircaseGoing: 
+            staircase.addResponse(T1approxCorrect, intensity = 100-percentNoise) #Add a 1 or 0 to signify a correct/detected or incorrect/missed trial
 
 timeAndDateStr = time.strftime("%H:%M on %d %b %Y", time.localtime())
 mainStaircaseGoing = False
-msg='Finished staircase component of experiment at ' + timeAndDateStr
+
+msg= ('ABORTED' if expStop else 'Finished') + ' staircase part of experiment at ' + timeAndDateStr
 logging.info(msg); print(msg)
 printStaircaseStuff(staircase, briefTrialUpdate=False, alsoLog=True)
-msg='Staircase estimate of threshold = ' + 100- np.around(staircase.quantile,3) + ' with sd =', staircase.sd()
+print('staircase.quantile=',round(staircase.quantile(),2),' sd=',round(staircase.sd(),2))
+msg= 'Staircase estimate of threshold = ' + str( 100- round(staircase.quantile(),3)  ) + ' with sd=' + str(round(staircase.sd(),2))
 logging.info(msg); print(msg)
 
-msg='Starting main (non-staircase) part of experiment'
-logging.info(msg); print(msg)
 nDoneAfterStaircase =0
 while nDoneAfterStaircase < trials.nTotal and expStop==False:
+    if nDoneAfterStaircase==0:
+        msg='Starting main (non-staircase) part of experiment'
+        logging.info(msg); print(msg)
     thisTrial = trials.next() #get a proper (non-staircase) trial
     cue1pos = thisTrial['cue1pos']
     cue2lag = thisTrial['cue2lag']
@@ -786,8 +781,8 @@ while nDoneAfterStaircase < trials.nTotal and expStop==False:
     expStop,passThisTrial,responses,responsesAutopilot = \
                 collectResponses(task,numRespsWanted,responseDebug=True)
     print(staircaseTrialN,'\t', file=dataFile) #first thing printed on each line of dataFile
-    correct,eachApproxCorrect,T1approxCorrect,passThisTrial,expStop = (
-            handleAndScoreResponse(expStop,passThisTrial,responses,responsesAutopilot,task,letterSequence,cuesPos,correctAnswers) )
+    correct,eachCorrect,eachApproxCorrect,T1approxCorrect,passThisTrial,expStop = (
+            handleAndScoreResponse(passThisTrial,responses,responsesAutopilot,task,letterSequence,cuesPos,correctAnswers) )
     print('afterStaircase\t', numCasesInterframeLong, file=dataFile) #timingBlips, last thing recorded on each line of dataFile
 
     numTrialsCorrect += correct #so count -1 as 0
@@ -810,21 +805,22 @@ while nDoneAfterStaircase < trials.nTotal and expStop==False:
     core.wait(.2); time.sleep(.2)
     #end trials loop
 timeAndDateStr = time.strftime("%H:%M on %d %b %Y", time.localtime())
-msg = 'finishing at '+timeAndDateStr
+msg = 'Finishing at '+timeAndDateStr
 print(msg);  logging.info(msg)
 if expStop:
     msg = 'user aborted experiment on keypress with trials done='+ str(nDoneAfterStaircase) + ' of ' + str(trials.nTotal+1)
     print(msg); logging.error(msg)
 
-print('Of ',nDoneAfterStaircase,' trials, ',numTrialsCorrect*1.0/nDoneAfterStaircase*100., '% exactly correct',sep='')
-print('All targets approximately correct in ',round(numTrialsApproxCorrect*1.0/nDoneAfterStaircase*100,1),'% of trials',sep='')
-print('T1: ',round(numTrialsEachCorrect[0]*1.0/nDoneAfterStaircase*100.,2), '% correct',sep='')
-if len(numTrialsEachCorrect) >1:
-    print('T2: ',round(numTrialsEachCorrect[1]*1.0/nDoneAfterStaircase*100,2),'% correct',sep='')
-print('T1: ',round(numTrialsEachApproxCorrect[0]*1.0/nDoneAfterStaircase*100,2),'% approximately correct',sep='')
-if len(numTrialsEachCorrect) >1:
-    print('T2:',round(numTrialsEachApproxCorrect[1]*1.0/nDoneAfterStaircase*100,2),'% approximately correct',sep='')
-
+if nDoneAfterStaircase >0:
+    print('Of ',nDoneAfterStaircase,' trials, ',numTrialsCorrect*1.0/nDoneAfterStaircase*100., '% exactly correct',sep='')
+    print('All targets approximately correct in ',round(numTrialsApproxCorrect*1.0/nDoneAfterStaircase*100,1),'% of trials',sep='')
+    print('T1: ',round(numTrialsEachCorrect[0]*1.0/nDoneAfterStaircase*100.,2), '% correct',sep='')
+    if len(numTrialsEachCorrect) >1:
+        print('T2: ',round(numTrialsEachCorrect[1]*1.0/nDoneAfterStaircase*100,2),'% correct',sep='')
+    print('T1: ',round(numTrialsEachApproxCorrect[0]*1.0/nDoneAfterStaircase*100,2),'% approximately correct',sep='')
+    if len(numTrialsEachCorrect) >1:
+        print('T2:',round(numTrialsEachApproxCorrect[1]*1.0/nDoneAfterStaircase*100,2),'% approximately correct',sep='')
+    
    #print 'breakdown by speed: ',
    #print numRightWrongEachSpeedOrder[:,1] / ( numRightWrongEachSpeedOrder[:,0] + numRightWrongEachSpeedOrder[:,1])   
 #contents = dataFile.getvalue(); print contents
