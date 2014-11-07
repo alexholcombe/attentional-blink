@@ -2,7 +2,6 @@
 #Alex Holcombe alex.holcombe@sydney.edu.au
 #licensing: CC-BY whch means do whatever you want with it, with an attribution to the author. If you want permission to use it without attribution, contact me.
 #5 Nov. Starting with non-git AB_addNoise_QUEST2.py
-
 from __future__ import print_function
 from psychopy import monitors, visual, event, data, logging, core, sound, gui
 import psychopy.info
@@ -24,7 +23,7 @@ refreshRate=60 #90 Hz used by Paolo  #set to the framerate of the monitor
 #same screen or external screen? scrn
 #Hz wrong, widthPix, heightPix
 demo=False #False
-exportImages= False#quits after one trial
+exportImages= False #quits after one trial
 autopilot=False
 subject='Hubert' #user is prompted to enter replacement name
 if autopilot: subject='auto'
@@ -93,14 +92,14 @@ mon.setSizePix( (widthPix,heightPix) )
 units='deg' #'cm'
 myWin = visual.Window(monitor=mon,size=(widthPix,heightPix),allowGUI=allowGUI,units=units,color=bgColor,colorSpace='rgb',fullscr=fullscr,screen=scrn,waitBlanking=waitBlank) #Holcombe lab monitor
 #Have to close window, then open it again
-quitFinder = True
+quitFinder = False
 if quitFinder:
     import os
     applescript="\'tell application \"Finder\" to quit\'"
     shellCmd = 'osascript -e '+applescript
     os.system(shellCmd)
  
- # Then gather run-time info. All parameters are optional:
+#Then gather run-time info. All parameters are optional:
 runInfo = psychopy.info.RunTimeInfo(
         # if you specify author and version here, it overrides the automatic detection of __author__ and __version__ in your script
         #author='<your name goes here, plus whatever you like, e.g., your lab or contact info>',
@@ -113,7 +112,7 @@ runInfo = psychopy.info.RunTimeInfo(
 #print(runInfo)
 logging.info(runInfo)
 
-#check screen refresh is what assuming it is ########################################################################
+#check screen refresh is what assuming it is ##############################################
 Hzs=list()
 myWin.flip(); myWin.flip();myWin.flip();myWin.flip();
 myWin.setRecordFrameIntervals(True) #otherwise myWin.fps won't work
@@ -121,7 +120,7 @@ for i in range(50):
     myWin.flip()
     Hzs.append( myWin.fps() )  #varies wildly on successive runs!
 myWin.setRecordFrameIntervals(False)
-# end testing of screen refresh########################################################################
+# end testing of screen refresh########################################################
 Hzs = np.array( Hzs );     Hz= np.median(Hzs)
 msPerFrame= 1000./Hz
 refreshMsg1= 'Frames per second ~='+ str( np.round(Hz,1) )
@@ -137,19 +136,38 @@ else:
     refreshMsg1 += ', which is close enough to desired val of ' + str( round(refreshRate,1) )
 refreshMsg3= ''
 myWinRes = myWin.size
-myWin.close() #have to close window to show dialog box
 myWin.allowGUI =True
-trialsPerCondition = 8 #default value
+myWin.close() #have to close window to show dialog box
+
+defaultNoiseLevel = 0.0 #to use if no staircase, set by user
+#Ask user if wants to staircase noise level
+myDlg = gui.Dlg(title="Attentional Blink, with optional staircase to find noise level to reduce T1 performance down to threshold") #, pos=(200,400))
+choicesList = ["No", "Yes"]
+myDlg.addField('Staircase percent noise dots', choices=choicesList)
+myDlg.addText("", color='Black')
+myDlg.addField('\tDefault (if NO to staircase) percent noise dots=',  defaultNoiseLevel, tip=str(staircaseTrials))
+myDlg.show()  #show dialog and wait for OK or Cancel
+if myDlg.OK:  #then the user pressed OK
+    initialInfo = myDlg.data
+    doStaircaseString = initialInfo[0]
+    doStaircase = choicesList.index(doStaircaseString)
+    defaultNoiseLevel = initialInfo[1]
+    print('doStaircase=',doStaircase, ' defaultNoiseLevel=',defaultNoiseLevel)
+else:
+    print('user cancelled')
+
+trialsPerCondition = 1 #8 #default value
 dlgLabelsOrdered = list()
 myDlg = gui.Dlg(title="RSVP experiment", pos=(200,400))
 if not autopilot:
     myDlg.addField('Subject name (default="Hubert"):', tip='or subject code')
     dlgLabelsOrdered.append('subject')
-dlgLabelsOrdered.append('staircaseTrials')
-myDlg.addField('Staircase trials (default=' + str(staircaseTrials) + '):',    tip=str(staircaseTrials))
-easyTrialsCondText = 'Num low-noise trials to begin staircase with (default=' + str(nEasyStaircaseStarterTrials) + '):'
-myDlg.addField(easyTrialsCondText, tip=str(nEasyStaircaseStarterTrials))
-dlgLabelsOrdered.append('easyTrials')
+if doStaircase:
+    dlgLabelsOrdered.append('staircaseTrials')
+    myDlg.addField('Staircase trials (default=' + str(staircaseTrials) + '):',    tip=str(staircaseTrials))
+    easyTrialsCondText = 'Num low-noise trials to begin staircase with (default=' + str(nEasyStaircaseStarterTrials) + '):'
+    myDlg.addField(easyTrialsCondText, tip=str(nEasyStaircaseStarterTrials))
+    dlgLabelsOrdered.append('easyTrials')
 myDlg.addField('Trials per condition (default=' + str(trialsPerCondition) + '):', tip=str(trialsPerCondition))
 dlgLabelsOrdered.append('trialsPerCondition')
 
@@ -167,10 +185,10 @@ if (not demo) and (myWinRes != [widthPix,heightPix]).any():
     myDlg.addText(msgWrongResolution, color='Red')
     logging.error(msgWrongResolution)
     print(msgWrongResolution)
-myDlg.addText('Note: during the experiment, press ESC at response screen to quit', color=[-1.,1.,-1.]) # color='DimGrey') color names stopped working along the way, for unknown reason
+myDlg.addText('Note: during the experiment, to abort press ESC at response screen', color=[-1.,1.,-1.]) # color='DimGrey') color names stopped working along the way, for unknown reason
 myDlg.show()
 
-if myDlg.OK:
+if myDlg.OK: #unpack information from dialogue box
    thisInfo = myDlg.data #this will be a list of data returned from each field added in order
    if not autopilot:
        name=thisInfo[dlgLabelsOrdered.index('subject')]
@@ -180,14 +198,15 @@ if myDlg.OK:
        trialsPerCondition = int( thisInfo[trialsField] ) #convert string to integer
        print('trialsPerCondition entered by user=',trialsPerCondition)
        logging.info('trialsPerCondition entered by user=',trialsPerCondition)
-   if len(thisInfo[dlgLabelsOrdered.index('staircaseTrials')]) >0:
-       staircaseTrials = int( thisInfo[ dlgLabelsOrdered.index('staircaseTrials') ] ) #convert string to integer
-       print('staircaseTrials entered by user=',staircaseTrials)
-       logging.info('staircaseTrials entered by user=',staircaseTrials)
-   if len(thisInfo[dlgLabelsOrdered.index('easyTrials')]) >0:
-       nEasyStaircaseStarterTrials = int( thisInfo[ dlgLabelsOrdered.index('easyTrials') ] ) #convert string to integer
-       print('nEasyStaircaseStarterTrials entered by user=',thisInfo[dlgLabelsOrdered.index('easyTrials')])
-       logging.info('nEasyStaircaseStarterTrials entered by user=',nEasyStaircaseStarterTrials)
+   if doStaircase:
+       if len(thisInfo[dlgLabelsOrdered.index('staircaseTrials')]) >0:
+           staircaseTrials = int( thisInfo[ dlgLabelsOrdered.index('staircaseTrials') ] ) #convert string to integer
+           print('staircaseTrials entered by user=',staircaseTrials)
+           logging.info('staircaseTrials entered by user=',staircaseTrials)
+       if len(thisInfo[dlgLabelsOrdered.index('easyTrials')]) >0:
+           nEasyStaircaseStarterTrials = int( thisInfo[ dlgLabelsOrdered.index('easyTrials') ] ) #convert string to integer
+           print('nEasyStaircaseStarterTrials entered by user=',thisInfo[dlgLabelsOrdered.index('easyTrials')])
+           logging.info('nEasyStaircaseStarterTrials entered by user=',nEasyStaircaseStarterTrials)
 else: 
    print('user cancelled')
    logging.flush()
@@ -389,7 +408,7 @@ def createNoiseArray(proportnNoise,fieldWidthPix):
 
 
 #print header for data file
-print('trialnum\tsubject\ttask\t',file=dataFile,end='')
+print('experimentPhase\ttrialnum\tsubject\ttask\t',file=dataFile,end='')
 if task=='T1':
     numRespsWanted = 1
 elif task=='T1T2':
@@ -400,7 +419,7 @@ for i in range(numRespsWanted):
    dataFile.write('response'+str(i)+'\t')
    dataFile.write('correct'+str(i)+'\t')
    dataFile.write('responsePosRelative'+str(i)+'\t')
-print('experimentPhase\ttimingBlips',file=dataFile)
+print('timingBlips',file=dataFile)
 #end of header
 
 def  oneFrameOfStim( n,cue,letterSequence,cueDurFrames,letterDurFrames,ISIframes,cuesPos,lettersDrawObjects,
@@ -663,78 +682,77 @@ def play_high_tone_correct_low_incorrect(correct, passThisTrial=False):
     else: #incorrect
         low.play()
 
-#create the staircase handler
-stepSizesLinear = [.2,.2,.1,.1,.05,.05]
-stepSizesLog = [log(1.4,10),log(1.4,10),log(1.3,10),log(1.3,10),log(1.2,10)]
-#create the staircase handler
-useQuest = True
-if  useQuest:
-    chrisFajouQuestWorks = data.QuestHandler(startVal = 0.95, startValSd = 0.75,
-                          stopInterval=0.3,
-                          nTrials=10,
-                          #extraInfo = thisInfo,
-                          pThreshold = 0.25,    
-                          gamma = 1./26,
-                          delta=0.02, #lapse rate, I suppose for Weibull function fit
-                          method = 'mean',
-                          stepType = 'lin',  #will home in on the 80% threshold. But stepType = 'log' doesn't usually work
-                          minVal=0.01, maxVal = 1.0
-                          )
-    staircase = data.QuestHandler(startVal = 95, 
-                          startValSd = 100,
-                          stopInterval= 1, #sd of posterior has to be this small or smaller for staircase to stop, unless nTrials reached
-                          nTrials = staircaseTrials,
-                          #extraInfo = thisInfo,
-                          pThreshold = 0.90, #0.25,    
-                          gamma = 1./26,
-                          delta=0.02, #lapse rate, I suppose for Weibull function fit
-                          method = 'quantile', #uses the median of the posterior as the final answer
-                          stepType = 'log',  #will home in on the 80% threshold. But stepType = 'log' doesn't usually work
-                          minVal=1, maxVal = 100
-                          )
-    print('created QUEST staircase')
-else: 
-    staircase = data.StairHandler(startVal = 0.1,
-                              stepType = 'log', #if log, what do I want to multiply it by
-                              stepSizes = stepSizesLog,    #step size to use after each reversal
-                              minVal=0, maxVal=1,
-                              nUp=1, nDown=3,  #will home in on the 80% threshold
-                              nReversals = 2, #The staircase terminates when nTrials have been exceeded, or when both nReversals and nTrials have been exceeded
-                              nTrials=1)
-    print('created conventional staircase')
-
-doingStaircasePhase = False #First phase of experiment is method of constant stimuli. If use naked QUEST, might converge too soon
-easyStaircaseStarterNoise = np.array([2, 5, 10, 80])#,30, 80, 40, 90, 30, 70, 30, 40, 80, 20, 20, 50 ]
-if nEasyStaircaseStarterTrials > len(easyStaircaseStarterNoise): #repeat array to accommodate desired number of easyStarterTrials
-    easyStaircaseStarterNoise = np.tile( easyStaircaseStarterNoise, ceil( nEasyStaircaseStarterTrials/len(easyStaircaseStarterNoise) ) )
-easyStaircaseStarterNoise = easyStaircaseStarterNoise[0:nEasyStaircaseStarterTrials]
-
-phasesMsg = ('Starting with '+str(nEasyStaircaseStarterTrials)+' of noise= '+str(easyStaircaseStarterNoise)+' then doing a max '+str(staircaseTrials)+'-trial staircase' +
-                        ' followed by '+str(trials.nTotal)+' trials at that noise level') #parentheses purely for line continuation
-print(phasesMsg)
 
 expStop=False; framesSaved=0
-
-corrEachTrial = list() #only needed for easyStaircaseStarterNoise
-staircaseTrialN = -1; mainStaircaseGoing = False
-while (not staircase.finished) and expStop==False: #staircase.thisTrialN < staircase.nTrials
-    if staircaseTrialN+1 < len(easyStaircaseStarterNoise): #still doing easyStaircaseStarterNoise
-        staircaseTrialN += 1
-        percentNoise = easyStaircaseStarterNoise[staircaseTrialN]
+if doStaircase:
+    #create the staircase handler
+    useQuest = True
+    if  useQuest:
+        chrisFajouQuestWorks = data.QuestHandler(startVal = 0.95, startValSd = 0.75,
+                              stopInterval=0.3,
+                              nTrials=10,
+                              #extraInfo = thisInfo,
+                              pThreshold = 0.25,    
+                              gamma = 1./26,
+                              delta=0.02, #lapse rate, I suppose for Weibull function fit
+                              method = 'mean',
+                              stepType = 'lin',  #will home in on the 80% threshold. But stepType = 'log' doesn't usually work
+                              minVal=0.01, maxVal = 1.0
+                              )
+        staircase = data.QuestHandler(startVal = 95, 
+                              startValSd = 100,
+                              stopInterval= 1, #sd of posterior has to be this small or smaller for staircase to stop, unless nTrials reached
+                              nTrials = staircaseTrials,
+                              #extraInfo = thisInfo,
+                              pThreshold = 0.90, #0.25,    
+                              gamma = 1./26,
+                              delta=0.02, #lapse rate, I suppose for Weibull function fit
+                              method = 'quantile', #uses the median of the posterior as the final answer
+                              stepType = 'log',  #will home in on the 80% threshold. But stepType = 'log' doesn't usually work
+                              minVal=1, maxVal = 100
+                              )
+        print('created QUEST staircase')
     else:
-        if staircaseTrialN+1 == len(easyStaircaseStarterNoise): #add these non-staircase trials so QUEST knows about them
-            mainStaircaseGoing = True
-            print('Readying to import ',corrEachTrial,' and intensities ',easyStaircaseStarterNoise)
-            staircase.importData(100-easyStaircaseStarterNoise, np.array(corrEachTrial)) 
-        try: #advance the staircase
-            printStaircaseStuff(staircase, briefTrialUpdate=True, alsoLog=False)
-            percentNoise = 100- staircase.next()  #will step through the staircase, based on whether told it (addData) got it right or wrong
-            print('Staircase advanced, percentNoise for this trial = ', np.around(percentNoise,2)) #debugON
+        stepSizesLinear = [.2,.2,.1,.1,.05,.05]
+        stepSizesLog = [log(1.4,10),log(1.4,10),log(1.3,10),log(1.3,10),log(1.2,10)]
+        staircase = data.StairHandler(startVal = 0.1,
+                                  stepType = 'log', #if log, what do I want to multiply it by
+                                  stepSizes = stepSizesLog,    #step size to use after each reversal
+                                  minVal=0, maxVal=1,
+                                  nUp=1, nDown=3,  #will home in on the 80% threshold
+                                  nReversals = 2, #The staircase terminates when nTrials have been exceeded, or when both nReversals and nTrials have been exceeded
+                                  nTrials=1)
+        print('created conventional staircase')
+        
+    easyStaircaseStarterNoise = np.array([2, 5, 10, 80])#,30, 80, 40, 90, 30, 70, 30, 40, 80, 20, 20, 50 ]
+    if nEasyStaircaseStarterTrials > len(easyStaircaseStarterNoise): #repeat array to accommodate desired number of easyStarterTrials
+        easyStaircaseStarterNoise = np.tile( easyStaircaseStarterNoise, ceil( nEasyStaircaseStarterTrials/len(easyStaircaseStarterNoise) ) )
+    easyStaircaseStarterNoise = easyStaircaseStarterNoise[0:nEasyStaircaseStarterTrials]
+    
+    phasesMsg = ('Starting with '+str(nEasyStaircaseStarterTrials)+' of noise= '+str(easyStaircaseStarterNoise)+' then doing a max '+str(staircaseTrials)+'-trial staircase' +
+                            ' followed by '+str(trials.nTotal)+' trials at that noise level') #parentheses purely for line continuation
+    print(phasesMsg)
+    
+    corrEachTrial = list() #only needed for easyStaircaseStarterNoise
+    staircaseTrialN = -1; mainStaircaseGoing = False
+    while (not staircase.finished) and expStop==False: #staircase.thisTrialN < staircase.nTrials
+        if staircaseTrialN+1 < len(easyStaircaseStarterNoise): #still doing easyStaircaseStarterNoise
             staircaseTrialN += 1
-        except StopIteration: #Need this here, even though test for finished above. I can't understand why finished test doesn't accomplish this.
-            print('stopping because staircase.next() returned a StopIteration, which it is supposed to do when it is finished')
-            break #break out of the trials loop
-    print('staircaseTrialN=',staircaseTrialN)
+            percentNoise = easyStaircaseStarterNoise[staircaseTrialN]
+        else:
+            if staircaseTrialN+1 == len(easyStaircaseStarterNoise): #add these non-staircase trials so QUEST knows about them
+                mainStaircaseGoing = True
+                print('Readying to import ',corrEachTrial,' and intensities ',easyStaircaseStarterNoise)
+                staircase.importData(100-easyStaircaseStarterNoise, np.array(corrEachTrial)) 
+            try: #advance the staircase
+                printStaircaseStuff(staircase, briefTrialUpdate=True, alsoLog=False)
+                percentNoise = 100- staircase.next()  #will step through the staircase, based on whether told it (addData) got it right or wrong
+                print('Staircase advanced, percentNoise for this trial = ', np.around(percentNoise,2)) #debugON
+                staircaseTrialN += 1
+            except StopIteration: #Need this here, even though test for finished above. I can't understand why finished test doesn't accomplish this.
+                print('stopping because staircase.next() returned a StopIteration, which it does when it is finished')
+                break #break out of the trials loop
+        print('staircaseTrialN=',staircaseTrialN)
     
     letterSequence,cuesPos,correctAnswers, ts  = do_RSVP_stim(cue1pos, cue2lag, percentNoise/100.,staircaseTrialN)
     numCasesInterframeLong = timingCheckAndLog(ts)
@@ -743,6 +761,10 @@ while (not staircase.finished) and expStop==False: #staircase.thisTrialN < stair
     expStop,passThisTrial,responses,responsesAutopilot = \
                 collectResponses(task,numRespsWanted,responseDebug=True)
     if not expStop:
+        if mainStaircaseGoing:
+            print('staircase\t', file=dataFile)
+        else: 
+            print('staircasePredesignatedNoiseLevel\t', file=dataFile)
         print(staircaseTrialN,'\t', file=dataFile) #first thing printed on each line of dataFile
         correct,eachCorrect,eachApproxCorrect,T1approxCorrect,passThisTrial,expStop = (
                 handleAndScoreResponse(passThisTrial,responses,responsesAutopilot,task,letterSequence,cuesPos,correctAnswers) )
@@ -756,16 +778,21 @@ while (not staircase.finished) and expStop==False: #staircase.thisTrialN < stair
         if mainStaircaseGoing: 
             staircase.addResponse(T1approxCorrect, intensity = 100-percentNoise) #Add a 1 or 0 to signify a correct/detected or incorrect/missed trial
 
-timeAndDateStr = time.strftime("%H:%M on %d %b %Y", time.localtime())
+    timeAndDateStr = time.strftime("%H:%M on %d %b %Y", time.localtime())
+    msg= ('ABORTED' if expStop else 'Finished') + ' staircase part of experiment at ' + timeAndDateStr
+    logging.info(msg); print(msg)
+    printStaircaseStuff(staircase, briefTrialUpdate=False, alsoLog=True)
+    print('staircase.quantile=',round(staircase.quantile(),2),' sd=',round(staircase.sd(),2))
+    threshNoise = 100- round(staircase.quantile(),3)
+    msg= 'Staircase estimate of threshold = ' + str( threshNoise  ) + ' with sd=' + str(round(staircase.sd(),2))
+    logging.info(msg); print(msg)
+
 mainStaircaseGoing = False
-
-msg= ('ABORTED' if expStop else 'Finished') + ' staircase part of experiment at ' + timeAndDateStr
-logging.info(msg); print(msg)
-printStaircaseStuff(staircase, briefTrialUpdate=False, alsoLog=True)
-print('staircase.quantile=',round(staircase.quantile(),2),' sd=',round(staircase.sd(),2))
-msg= 'Staircase estimate of threshold = ' + str( 100- round(staircase.quantile(),3)  ) + ' with sd=' + str(round(staircase.sd(),2))
-logging.info(msg); print(msg)
-
+if doStaircase:
+    noisePercent = threshNoise
+else: #didn't staircase, instead using defaultNoiseLevel
+    noisePercent = defaultNoiseLevel
+    
 nDoneAfterStaircase =0
 while nDoneAfterStaircase < trials.nTotal and expStop==False:
     if nDoneAfterStaircase==0:
@@ -774,39 +801,40 @@ while nDoneAfterStaircase < trials.nTotal and expStop==False:
     thisTrial = trials.next() #get a proper (non-staircase) trial
     cue1pos = thisTrial['cue1pos']
     cue2lag = thisTrial['cue2lag']
-    letterSequence,cuesPos,correctAnswers, ts  = do_RSVP_stim(cue1pos, cue2lag, percentNoise/100.,staircaseTrialN)
+    letterSequence,cuesPos,correctAnswers,ts  = do_RSVP_stim(cue1pos, cue2lag, noisePercent/100.,nDoneAfterStaircase)
     numCasesInterframeLong = timingCheckAndLog(ts)
     
     responseDebug=False; responses = list(); responsesAutopilot = list();
     expStop,passThisTrial,responses,responsesAutopilot = \
                 collectResponses(task,numRespsWanted,responseDebug=True)
-    print(staircaseTrialN,'\t', file=dataFile) #first thing printed on each line of dataFile
-    correct,eachCorrect,eachApproxCorrect,T1approxCorrect,passThisTrial,expStop = (
-            handleAndScoreResponse(passThisTrial,responses,responsesAutopilot,task,letterSequence,cuesPos,correctAnswers) )
-    print('afterStaircase\t', numCasesInterframeLong, file=dataFile) #timingBlips, last thing recorded on each line of dataFile
-
-    numTrialsCorrect += correct #so count -1 as 0
-    numTrialsApproxCorrect += eachApproxCorrect.all()
-    numTrialsEachCorrect += eachCorrect
-    numTrialsEachApproxCorrect += eachApproxCorrect
-        
-    if exportImages:  #catches one frame of response
-         myWin.getMovieFrame() #I cant explain why another getMovieFrame, and core.wait is needed
-         framesSaved +=1; core.wait(.1)
-         myWin.saveMovieFrames('exported/frames.mov')  
-         expStop=True
-    core.wait(.1)
-    if feedback: play_high_tone_correct_low_incorrect(correct, passThisTrial=False)
     if not expStop:
-        nDoneAfterStaircase+=1
+        print('main\t', file=dataFile)
+        print(nDoneAfterStaircase,'\t', file=dataFile) #first thing printed on each line of dataFile
+        correct,eachCorrect,eachApproxCorrect,T1approxCorrect,passThisTrial,expStop = (
+                handleAndScoreResponse(passThisTrial,responses,responsesAutopilot,task,letterSequence,cuesPos,correctAnswers) )
+        print(numCasesInterframeLong, file=dataFile) #timingBlips, last thing recorded on each line of dataFile
     
-    dataFile.flush(); logging.flush()
-    #print 'nDone=', nDone,' trials.thisN=',trials.thisN,' trials.nTotal=',trials.nTotal
-    core.wait(.2); time.sleep(.2)
+        numTrialsCorrect += correct #so count -1 as 0
+        numTrialsApproxCorrect += eachApproxCorrect.all()
+        numTrialsEachCorrect += eachCorrect
+        numTrialsEachApproxCorrect += eachApproxCorrect
+            
+        if exportImages:  #catches one frame of response
+             myWin.getMovieFrame() #I cant explain why another getMovieFrame, and core.wait is needed
+             framesSaved +=1; core.wait(.1)
+             myWin.saveMovieFrames('exported/frames.mov')  
+             expStop=True
+        core.wait(.1)
+        if feedback: play_high_tone_correct_low_incorrect(correct, passThisTrial=False)
+        nDoneAfterStaircase+=1
+        
+        dataFile.flush(); logging.flush()
+        print('nDoneAfterStaircase=', nDoneAfterStaircase,' trials.thisN=',trials.thisN,' trials.nTotal=',trials.nTotal)
+        core.wait(.2); time.sleep(.2)
     #end trials loop
 timeAndDateStr = time.strftime("%H:%M on %d %b %Y", time.localtime())
 msg = 'Finishing at '+timeAndDateStr
-print(msg);  logging.info(msg)
+print(msg); logging.info(msg)
 if expStop:
     msg = 'user aborted experiment on keypress with trials done='+ str(nDoneAfterStaircase) + ' of ' + str(trials.nTotal+1)
     print(msg); logging.error(msg)
