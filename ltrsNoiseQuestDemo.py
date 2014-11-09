@@ -2,8 +2,8 @@
 """
 by Alex Holcombe
 Before brought into the repository, this file was ltrsNoiseAdvanceQuestManually.py
-I used to have the noise parameter go from 0 to 1 but with log stepping, staircase always crapped out, don't know why
-So use percentNoise (0->100) instead of proportion
+I used to have the noise parameter go from 0 to 1 but with log stepping, staircase always crapped out, don't know why,
+so I use percentNoise (0->100) instead of proportion
 """
 from __future__ import print_function
 from psychopy import core, visual, event, misc, data

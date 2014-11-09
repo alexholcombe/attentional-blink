@@ -22,9 +22,10 @@ refreshRate=60 #90 Hz used by Paolo  #set to the framerate of the monitor
 #THINGS THAT COULD PREVENT SUCCESS ON A STRANGE MACHINE
 #same screen or external screen? scrn
 #Hz wrong, widthPix, heightPix
+quitFinder = False #checkRefreshEtc
 demo=False #False
 exportImages= False #quits after one trial
-autopilot=False
+autopilot=True
 subject='Hubert' #user is prompted to enter replacement name
 if autopilot: subject='auto'
 if os.path.isdir('.'+os.sep+'data'):
@@ -41,7 +42,7 @@ if demo:
     refreshRate = 60.;  #100
 
 staircaseTrials = 4
-nEasyStaircaseStarterTrials = 3
+nEasyStaircaseStarterTrials = 10
 easyStaircaseStarterNoise = np.array([2, 2, 5, 5, 10, 80, 80, 80])#,30, 80, 40, 90, 30, 70, 30, 40, 80, 20, 20, 50 ]
 
 bgColor = [-.7,-.7,-.7] # [-1,-1,-1]
@@ -91,71 +92,70 @@ mon = monitors.Monitor(monitorname,width=monitorwidth, distance=viewdist)#relyin
 mon.setSizePix( (widthPix,heightPix) )
 units='deg' #'cm'
 myWin = visual.Window(monitor=mon,size=(widthPix,heightPix),allowGUI=allowGUI,units=units,color=bgColor,colorSpace='rgb',fullscr=fullscr,screen=scrn,waitBlanking=waitBlank) #Holcombe lab monitor
-#Have to close window, then open it again
-quitFinder = False
+
+# create a DlgFromDict
+info = { 'Staircase percent noise dots': True, 'Check refresh etc':True }
+infoDlg = gui.DlgFromDict(dictionary=info, 
+    title='Attentional Blink, with optional staircase to find noise level to reduce T1 performance down to threshold', 
+    order=['Staircase percent noise dots', 'Check refresh etc'], 
+    tip={'Check refresh etc': 'To confirm refresh rate and that can keep up, at least when drawing a grating'},
+    #fixed=['Check refresh etc'])#this attribute can't be changed by the user
+    )
+doStaircase = info['Staircase percent noise dots']
+checkRefreshEtc = info['Check refresh etc']
+
+if checkRefreshEtc:
+    quitFinder = True
+
 if quitFinder:
     import os
     applescript="\'tell application \"Finder\" to quit\'"
     shellCmd = 'osascript -e '+applescript
     os.system(shellCmd)
- 
-#Then gather run-time info. All parameters are optional:
-runInfo = psychopy.info.RunTimeInfo(
-        # if you specify author and version here, it overrides the automatic detection of __author__ and __version__ in your script
-        #author='<your name goes here, plus whatever you like, e.g., your lab or contact info>',
-        #version="<your experiment version info>",
-        win=myWin,    ## a psychopy.visual.Window() instance; None = default temp window used; False = no win, no win.flips()
-        refreshTest='grating', ## None, True, or 'grating' (eye-candy to avoid a blank screen)
-        verbose=True, ## True means report on everything 
-        userProcsDetailed=True,  ## if verbose and userProcsDetailed, return (command, process-ID) of the user's processes
-        )
-#print(runInfo)
-logging.info(runInfo)
 
-#check screen refresh is what assuming it is ##############################################
-Hzs=list()
-myWin.flip(); myWin.flip();myWin.flip();myWin.flip();
-myWin.setRecordFrameIntervals(True) #otherwise myWin.fps won't work
-for i in range(50):
-    myWin.flip()
-    Hzs.append( myWin.fps() )  #varies wildly on successive runs!
-myWin.setRecordFrameIntervals(False)
-# end testing of screen refresh########################################################
-Hzs = np.array( Hzs );     Hz= np.median(Hzs)
-msPerFrame= 1000./Hz
-refreshMsg1= 'Frames per second ~='+ str( np.round(Hz,1) )
-refreshRateTolerancePct = 3
-pctOff = abs( (np.median(Hzs)-refreshRate) / refreshRate)
-refreshRateWrong =  pctOff > (refreshRateTolerancePct/100.)
 refreshMsg2 = ''
-if refreshRateWrong:
-    refreshMsg1 += ' BUT'
-    refreshMsg1 += ' program assumes ' + str(refreshRate)
-    refreshMsg2 =  'which is off by more than' + str(round(refreshRateTolerancePct,0)) + '%!!'
-else:
-    refreshMsg1 += ', which is close enough to desired val of ' + str( round(refreshRate,1) )
-refreshMsg3= ''
-myWinRes = myWin.size
-myWin.allowGUI =True
+if not checkRefreshEtc:
+    refreshMsg1 = 'REFRESH RATE NOT CHECKED'
+    refreshRateWrong = False
+else: #checkRefresh
+    runInfo = psychopy.info.RunTimeInfo(
+            # if you specify author and version here, it overrides the automatic detection of __author__ and __version__ in your script
+            #author='<your name goes here, plus whatever you like, e.g., your lab or contact info>',
+            #version="<your experiment version info>",
+            win=myWin,    ## a psychopy.visual.Window() instance; None = default temp window used; False = no win, no win.flips()
+            refreshTest='grating', ## None, True, or 'grating' (eye-candy to avoid a blank screen)
+            verbose=True, ## True means report on everything 
+            userProcsDetailed=True  ## if verbose and userProcsDetailed, return (command, process-ID) of the user's processes
+            )
+    #print(runInfo)
+    logging.info(runInfo)
+
+    #check screen refresh is what assuming it is ##############################################
+    Hzs=list()
+    myWin.flip(); myWin.flip();myWin.flip();myWin.flip();
+    myWin.setRecordFrameIntervals(True) #otherwise myWin.fps won't work
+    for i in range(50):
+        myWin.flip()
+        Hzs.append( myWin.fps() )  #varies wildly on successive runs!
+    myWin.setRecordFrameIntervals(False)
+    # end testing of screen refresh########################################################
+    Hzs = np.array( Hzs );     Hz= np.median(Hzs)
+    msPerFrame= 1000./Hz
+    refreshMsg1= 'Frames per second ~='+ str( np.round(Hz,1) )
+    refreshRateTolerancePct = 3
+    pctOff = abs( (np.median(Hzs)-refreshRate) / refreshRate)
+    refreshRateWrong =  pctOff > (refreshRateTolerancePct/100.)
+    if refreshRateWrong:
+        refreshMsg1 += ' BUT'
+        refreshMsg1 += ' program assumes ' + str(refreshRate)
+        refreshMsg2 =  'which is off by more than' + str(round(refreshRateTolerancePct,0)) + '%!!'
+    else:
+        refreshMsg1 += ', which is close enough to desired val of ' + str( round(refreshRate,1) )
+    myWinRes = myWin.size
+    myWin.allowGUI =True
 myWin.close() #have to close window to show dialog box
 
 defaultNoiseLevel = 0.0 #to use if no staircase, set by user
-#Ask user if wants to staircase noise level
-myDlg = gui.Dlg(title="Attentional Blink, with optional staircase to find noise level to reduce T1 performance down to threshold") #, pos=(200,400))
-choicesList = ["No", "Yes"]
-myDlg.addField('Staircase percent noise dots', choices=choicesList)
-myDlg.addText("", color='Black')
-myDlg.addField('\tDefault (if NO to staircase) percent noise dots=',  defaultNoiseLevel, tip=str(staircaseTrials))
-myDlg.show()  #show dialog and wait for OK or Cancel
-if myDlg.OK:  #then the user pressed OK
-    initialInfo = myDlg.data
-    doStaircaseString = initialInfo[0]
-    doStaircase = choicesList.index(doStaircaseString)
-    defaultNoiseLevel = initialInfo[1]
-    print('doStaircase=',doStaircase, ' defaultNoiseLevel=',defaultNoiseLevel)
-else:
-    print('user cancelled')
-
 trialsPerCondition = 1 #8 #default value
 dlgLabelsOrdered = list()
 myDlg = gui.Dlg(title="RSVP experiment", pos=(200,400))
@@ -168,19 +168,22 @@ if doStaircase:
     easyTrialsCondText = 'Num low-noise trials to begin staircase with (default=' + str(nEasyStaircaseStarterTrials) + '):'
     myDlg.addField(easyTrialsCondText, tip=str(nEasyStaircaseStarterTrials))
     dlgLabelsOrdered.append('easyTrials')
+else:
+    myDlg.addField('\tDefault (if NO to staircase) percent noise dots=',  defaultNoiseLevel, tip=str(defaultNoiseLevel))
+    dlgLabelsOrdered.append('defaultNoiseLevel')
+
 myDlg.addField('Trials per condition (default=' + str(trialsPerCondition) + '):', tip=str(trialsPerCondition))
 dlgLabelsOrdered.append('trialsPerCondition')
 
 myDlg.addText(refreshMsg1, color='Black')
 if refreshRateWrong:
     myDlg.addText(refreshMsg2, color='Red')
-myDlg.addText(refreshMsg3, color='Black')
 if refreshRateWrong:
     logging.error(refreshMsg1+refreshMsg2)
 else: logging.info(refreshMsg1+refreshMsg2)
 #myDlg.addText(phasesMsg, color='Black')
 
-if (not demo) and (myWinRes != [widthPix,heightPix]).any():
+if checkRefreshEtc and (not demo) and (myWinRes != [widthPix,heightPix]).any():
     msgWrongResolution = 'Screen apparently NOT the desired resolution of '+ str(widthPix)+'x'+str(heightPix)+ ' pixels!!'
     myDlg.addText(msgWrongResolution, color='Red')
     logging.error(msgWrongResolution)
@@ -207,8 +210,10 @@ if myDlg.OK: #unpack information from dialogue box
            nEasyStaircaseStarterTrials = int( thisInfo[ dlgLabelsOrdered.index('easyTrials') ] ) #convert string to integer
            print('nEasyStaircaseStarterTrials entered by user=',thisInfo[dlgLabelsOrdered.index('easyTrials')])
            logging.info('nEasyStaircaseStarterTrials entered by user=',nEasyStaircaseStarterTrials)
+   else:
+        defaultNoiseLevel = int (thisInfo[ dlgLabelsOrdered.index('defaultNoiseLevel') ])
 else: 
-   print('user cancelled')
+   print('User cancelled from dialog box.')
    logging.flush()
    core.quit()
 if not demo: 
@@ -370,13 +375,14 @@ def printStaircaseStuff(staircase, briefTrialUpdate, alsoLog=False):
         print(msg)
         if alsoLog:     logging.info(msg)
     else:
-        msg= 'thisTrialN (current trial number) =' + str(staircase.thisTrialN)
+        msg= 'staircase thisTrialN =' + str(staircase.thisTrialN)
         print(msg)
         if alsoLog:     logging.info(msg)
         # staircase.calculateNextIntensity() sounds like something useful to get a preview of the next trial. Instead, seems to be 
         #the internal function used to advance to the next trial.
     
-def createNoiseArray(proportnNoise,fieldWidthPix): 
+def createNoiseArray(proportnNoise,fieldWidthPix,noiseColor): 
+    #noiseColor, assumed that colorSpace='rgb', triple between -1 and 1
     numDots = int(proportnNoise*fieldWidthPix*fieldWidthPix)
     if numDots ==0:
         return None
@@ -400,7 +406,7 @@ def createNoiseArray(proportnNoise,fieldWidthPix):
         nElements=numDots, fieldSize=[fieldWidthPix,fieldWidthPix],
         fieldPos=(0.0, verticalAdjust),
         colorSpace='rgb',
-        colors=-1, #set to black
+        colors=noiseColor, #set to black
         xys= dotCoords, 
         opacities=opacs,
         sizes=1)
@@ -529,7 +535,7 @@ for i in range(0,26):
 noiseFieldWidthDeg=ltrHeight *1.0
 noiseFieldWidthPix = int( round( noiseFieldWidthDeg*pixelperdegree ) )
 
-def timingCheckAndLog(ts):
+def timingCheckAndLog(ts,trialN):
     #check for timing problems and log them
     #ts is a list of the times of the clock after each frame
     interframeIntervs = np.diff(ts)*1000
@@ -572,7 +578,7 @@ numTrialsEachApproxCorrect= np.zeros( numRespsWanted )
 
 def do_RSVP_stim(cue1pos, cue2lag, proportnNoise,trialN):
     #relies on global variables:
-    #   logging, 
+    #   logging, bgColor
     #
     cuesPos = [] #will contain the positions of all the cues (targets)
     cuesPos.append(cue1pos)
@@ -584,7 +590,7 @@ def do_RSVP_stim(cue1pos, cue2lag, proportnNoise,trialN):
     correctAnswers = np.array( letterSequence[cuesPos] )
     noise = None; allFieldCoords=None; numNoiseDots=0
     if proportnNoise > 0: #generating noise is time-consuming, so only do it once per trial. Then shuffle noise coordinates for each letter
-        (noise,allFieldCoords,numNoiseDots) = createNoiseArray(proportnNoise,noiseFieldWidthPix) 
+        (noise,allFieldCoords,numNoiseDots) = createNoiseArray(proportnNoise,noiseFieldWidthPix, bgColor)
 
     preDrawStimToGreasePipeline = list() #I don't know why this works, but without drawing it I have consistent timing blip first time that draw ringInnerR for phantom contours
     cue.setLineColor(bgColor)
@@ -700,7 +706,7 @@ if doStaircase:
                               minVal=0.01, maxVal = 1.0
                               )
         staircase = data.QuestHandler(startVal = 95, 
-                              startValSd = 100,
+                              startValSd = 80,
                               stopInterval= 1, #sd of posterior has to be this small or smaller for staircase to stop, unless nTrials reached
                               nTrials = staircaseTrials,
                               #extraInfo = thisInfo,
@@ -731,8 +737,9 @@ if doStaircase:
     
     phasesMsg = ('Starting with '+str(nEasyStaircaseStarterTrials)+' of noise= '+str(easyStaircaseStarterNoise)+' then doing a max '+str(staircaseTrials)+'-trial staircase' +
                             ' followed by '+str(trials.nTotal)+' trials at that noise level') #parentheses purely for line continuation
-    print(phasesMsg)
+    print(phasesMsg); logging.info(phasesMsg)
     
+    #staircaseStarterNoise PHASE OF EXPERIMENT
     corrEachTrial = list() #only needed for easyStaircaseStarterNoise
     staircaseTrialN = -1; mainStaircaseGoing = False
     while (not staircase.finished) and expStop==False: #staircase.thisTrialN < staircase.nTrials
@@ -746,47 +753,48 @@ if doStaircase:
                 staircase.importData(100-easyStaircaseStarterNoise, np.array(corrEachTrial)) 
             try: #advance the staircase
                 printStaircaseStuff(staircase, briefTrialUpdate=True, alsoLog=False)
-                percentNoise = 100- staircase.next()  #will step through the staircase, based on whether told it (addData) got it right or wrong
+                percentNoise = 100. - staircase.next()  #will step through the staircase, based on whether told it (addResponse) got it right or wrong
                 print('Staircase advanced, percentNoise for this trial = ', np.around(percentNoise,2)) #debugON
                 staircaseTrialN += 1
             except StopIteration: #Need this here, even though test for finished above. I can't understand why finished test doesn't accomplish this.
                 print('stopping because staircase.next() returned a StopIteration, which it does when it is finished')
                 break #break out of the trials loop
-        print('staircaseTrialN=',staircaseTrialN)
-    
-    letterSequence,cuesPos,correctAnswers, ts  = do_RSVP_stim(cue1pos, cue2lag, percentNoise/100.,staircaseTrialN)
-    numCasesInterframeLong = timingCheckAndLog(ts)
-    
-    responseDebug=False; responses = list(); responsesAutopilot = list();
-    expStop,passThisTrial,responses,responsesAutopilot = \
-                collectResponses(task,numRespsWanted,responseDebug=True)
-    if not expStop:
-        if mainStaircaseGoing:
-            print('staircase\t', file=dataFile)
-        else: 
-            print('staircasePredesignatedNoiseLevel\t', file=dataFile)
-        print(staircaseTrialN,'\t', file=dataFile) #first thing printed on each line of dataFile
-        correct,eachCorrect,eachApproxCorrect,T1approxCorrect,passThisTrial,expStop = (
-                handleAndScoreResponse(passThisTrial,responses,responsesAutopilot,task,letterSequence,cuesPos,correctAnswers) )
-        print('Scored response. expStop=',expStop) #debugON
-        print('staircase\t', numCasesInterframeLong, file=dataFile) #timingBlips, last thing recorded on each line of dataFile
-        core.wait(.06)
-        if feedback: 
-            play_high_tone_correct_low_incorrect(correct, passThisTrial=False)
-        print('expStop=',expStop,'   T1approxCorrect=',T1approxCorrect) #debugON
-        corrEachTrial.append(T1approxCorrect)
-        if mainStaircaseGoing: 
-            staircase.addResponse(T1approxCorrect, intensity = 100-percentNoise) #Add a 1 or 0 to signify a correct/detected or incorrect/missed trial
-
+        #print('staircaseTrialN=',staircaseTrialN)
+        letterSequence,cuesPos,correctAnswers, ts  = do_RSVP_stim(cue1pos, cue2lag, percentNoise/100.,staircaseTrialN)
+        numCasesInterframeLong = timingCheckAndLog(ts,staircaseTrialN)
+        
+        responseDebug=False; responses = list(); responsesAutopilot = list();
+        expStop,passThisTrial,responses,responsesAutopilot = \
+                    collectResponses(task,numRespsWanted,responseDebug=True)
+        if not expStop:
+            if mainStaircaseGoing:
+                print('staircase\t', end='', file=dataFile)
+            else: 
+                print('staircase_starterNoise\t', end='', file=dataFile)
+            print(staircaseTrialN,'\t', end='', file=dataFile) #first thing printed on each line of dataFile
+            correct,eachCorrect,eachApproxCorrect,T1approxCorrect,passThisTrial,expStop = (
+                    handleAndScoreResponse(passThisTrial,responses,responsesAutopilot,task,letterSequence,cuesPos,correctAnswers) )
+            #print('Scored response. expStop=',expStop) #debug
+            print('staircase\t', numCasesInterframeLong, file=dataFile) #timingBlips, last thing recorded on each line of dataFile
+            core.wait(.06)
+            if feedback: 
+                play_high_tone_correct_low_incorrect(correct, passThisTrial=False)
+            print('expStop=',expStop,'   T1approxCorrect=',T1approxCorrect) #debugON
+            corrEachTrial.append(T1approxCorrect)
+            if mainStaircaseGoing: 
+                staircase.addResponse(T1approxCorrect, intensity = 100-percentNoise) #Add a 1 or 0 to signify a correct/detected or incorrect/missed trial
+                #print('Have added an intensity of','{:.3f}'.format(100-percentNoise), 'T1approxCorrect =', T1approxCorrect, ' to staircase') #debugON
+    #ENDING STAIRCASE PHASE
     timeAndDateStr = time.strftime("%H:%M on %d %b %Y", time.localtime())
     msg= ('ABORTED' if expStop else 'Finished') + ' staircase part of experiment at ' + timeAndDateStr
     logging.info(msg); print(msg)
     printStaircaseStuff(staircase, briefTrialUpdate=False, alsoLog=True)
     print('staircase.quantile=',round(staircase.quantile(),2),' sd=',round(staircase.sd(),2))
     threshNoise = 100- round(staircase.quantile(),3)
-    msg= 'Staircase estimate of threshold = ' + str( threshNoise  ) + ' with sd=' + str(round(staircase.sd(),2))
+    threshNoise = max( 0, threshNoise ) #If get them all wrong, posterior peaks at a very negative number
+    msg= 'Staircase estimate of threshold = ' + str(threshNoise) + ' with sd=' + str(round(staircase.sd(),2))
     logging.info(msg); print(msg)
-
+    #END if doStaircase
 mainStaircaseGoing = False
 if doStaircase:
     noisePercent = threshNoise
@@ -802,14 +810,14 @@ while nDoneAfterStaircase < trials.nTotal and expStop==False:
     cue1pos = thisTrial['cue1pos']
     cue2lag = thisTrial['cue2lag']
     letterSequence,cuesPos,correctAnswers,ts  = do_RSVP_stim(cue1pos, cue2lag, noisePercent/100.,nDoneAfterStaircase)
-    numCasesInterframeLong = timingCheckAndLog(ts)
+    numCasesInterframeLong = timingCheckAndLog(ts,nDoneAfterStaircase)
     
     responseDebug=False; responses = list(); responsesAutopilot = list();
     expStop,passThisTrial,responses,responsesAutopilot = \
                 collectResponses(task,numRespsWanted,responseDebug=True)
     if not expStop:
-        print('main\t', file=dataFile)
-        print(nDoneAfterStaircase,'\t', file=dataFile) #first thing printed on each line of dataFile
+        print('main\t', end='', file=dataFile) #first thing printed on each line of dataFile
+        print(nDoneAfterStaircase,'\t', end='', file=dataFile) 
         correct,eachCorrect,eachApproxCorrect,T1approxCorrect,passThisTrial,expStop = (
                 handleAndScoreResponse(passThisTrial,responses,responsesAutopilot,task,letterSequence,cuesPos,correctAnswers) )
         print(numCasesInterframeLong, file=dataFile) #timingBlips, last thing recorded on each line of dataFile
