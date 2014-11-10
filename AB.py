@@ -1,6 +1,6 @@
 #Jan 2012 start. Implementation of attentional blink task. Also see Martini 2012 Attention Perception & Psychophysics "SOURCES OF BIAS AND UNCERTAINTY IN A VISUAL TEMPORAL INDIVIDUATION TASK"
 #Alex Holcombe alex.holcombe@sydney.edu.au
-#licensing: CC-BY which means do whatever you want with it, with an attribution to the author. If you want permission to use it without attribution, contact me.
+#licensing: MIT license, like CC-BY for code which means do whatever you want with it, with an attribution to the author. If you want permission to use it without attribution, contact me.
 #5 Nov. Starting with non-git AB_addNoise_QUEST2.py
 from __future__ import print_function
 from psychopy import monitors, visual, event, data, logging, core, sound, gui
@@ -14,7 +14,7 @@ import itertools, time, sys, os
 #with a duticycle of 90ms (~11 Hz) and each character shown for 3 frames (33 ms at 90 Hz framerate). Note that in those conditions the bottom of AB at lags 2 and 3 is effectively at chance, so there may be a floor effect there.
 
 #In experiment 1b I used 15Hz streams, 2 blocks of 100 trials, and that takes roughly 12-15 minutes.
-#There is some learning, Paolo measured it in experiment 1a with repeat subjects (graph attached), so you should check whether your effects would be washed out by this. 
+#There is some learning, Martini  measured it in experiment 1a with repeat subjects (graph attached), so you should check whether your effects would be washed out by this. 
 #Also, experiment 1b was run with T1 fixed, i.e. the cue was always in the midstream position.
 
 tasks=['T1','T1T2']; task = tasks[1]
@@ -23,9 +23,9 @@ refreshRate=60 #90 Hz used by Paolo  #set to the framerate of the monitor
 #same screen or external screen? scrn
 #Hz wrong, widthPix, heightPix
 quitFinder = False #checkRefreshEtc
+autopilot=False
 demo=False #False
 exportImages= False #quits after one trial
-autopilot=True
 subject='Hubert' #user is prompted to enter replacement name
 if autopilot: subject='auto'
 if os.path.isdir('.'+os.sep+'data'):
@@ -770,10 +770,10 @@ if doStaircase:
             if mainStaircaseGoing:
                 print('staircase\t', end='', file=dataFile)
             else: 
-                print('staircase_starterNoise\t', end='', file=dataFile)
+                print('staircase_preface\t', end='', file=dataFile)
              #header start      'trialnum\tsubject\ttask\t'
             print(staircaseTrialN,'\t', end='', file=dataFile) #first thing printed on each line of dataFile
-            print(subject,'\t',task,'\t', percentNoise,'\t', end='', file=dataFile)
+            print(subject,'\t',task,'\t', round(percentNoise,3),'\t', end='', file=dataFile)
             correct,eachCorrect,eachApproxCorrect,T1approxCorrect,passThisTrial,expStop = (
                     handleAndScoreResponse(passThisTrial,responses,responsesAutopilot,task,letterSequence,cuesPos,correctAnswers) )
             #print('Scored response. expStop=',expStop) #debug
@@ -820,7 +820,7 @@ while nDoneAfterStaircase < trials.nTotal and expStop==False:
     if not expStop:
         print('main\t', end='', file=dataFile) #first thing printed on each line of dataFile
         print(nDoneAfterStaircase,'\t', end='', file=dataFile)
-        print(subject,'\t',task,'\t', percentNoise,'\t', end='', file=dataFile)
+        print(subject,'\t',task,'\t', round(percentNoise,3),'\t', end='', file=dataFile)
         correct,eachCorrect,eachApproxCorrect,T1approxCorrect,passThisTrial,expStop = (
                 handleAndScoreResponse(passThisTrial,responses,responsesAutopilot,task,letterSequence,cuesPos,correctAnswers) )
         print(numCasesInterframeLong, file=dataFile) #timingBlips, last thing recorded on each line of dataFile
