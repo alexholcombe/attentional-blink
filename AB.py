@@ -25,7 +25,7 @@ refreshRate=60 #90 Hz used by Paolo  #set to the framerate of the monitor
 quitFinder = False #checkRefreshEtc
 demo=False #False
 exportImages= False #quits after one trial
-autopilot=True
+autopilot=False
 subject='Hubert' #user is prompted to enter replacement name
 if autopilot: subject='auto'
 if os.path.isdir('.'+os.sep+'data'):
@@ -163,11 +163,11 @@ if not autopilot:
     myDlg.addField('Subject name (default="Hubert"):', tip='or subject code')
     dlgLabelsOrdered.append('subject')
 if doStaircase:
-    dlgLabelsOrdered.append('staircaseTrials')
-    myDlg.addField('Staircase trials (default=' + str(staircaseTrials) + '):',    tip=str(staircaseTrials))
-    easyTrialsCondText = 'Num low-noise trials to begin staircase with (default=' + str(nEasyStaircaseStarterTrials) + '):'
+    easyTrialsCondText = 'Num preassigned noise trials to preface staircase with (default=' + str(nEasyStaircaseStarterTrials) + '):'
     myDlg.addField(easyTrialsCondText, tip=str(nEasyStaircaseStarterTrials))
     dlgLabelsOrdered.append('easyTrials')
+    myDlg.addField('Staircase trials (default=' + str(staircaseTrials) + '):', tip="Staircase will run until this number is reached or it thinks it has precise estimate of threshold")
+    dlgLabelsOrdered.append('staircaseTrials')
 else:
     myDlg.addField('\tDefault (if NO to staircase) percent noise dots=',  defaultNoiseLevel, tip=str(defaultNoiseLevel))
     dlgLabelsOrdered.append('defaultNoiseLevel')
@@ -775,7 +775,7 @@ if doStaircase:
             correct,eachCorrect,eachApproxCorrect,T1approxCorrect,passThisTrial,expStop = (
                     handleAndScoreResponse(passThisTrial,responses,responsesAutopilot,task,letterSequence,cuesPos,correctAnswers) )
             #print('Scored response. expStop=',expStop) #debug
-            print('staircase\t', numCasesInterframeLong, file=dataFile) #timingBlips, last thing recorded on each line of dataFile
+            print(numCasesInterframeLong, file=dataFile) #timingBlips, last thing recorded on each line of dataFile
             core.wait(.06)
             if feedback: 
                 play_high_tone_correct_low_incorrect(correct, passThisTrial=False)
