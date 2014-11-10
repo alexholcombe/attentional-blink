@@ -42,8 +42,9 @@ if demo:
     refreshRate = 60.;  #100
 
 staircaseTrials = 4
-nEasyStaircaseStarterTrials = 10
-easyStaircaseStarterNoise = np.array([2, 2, 5, 5, 10, 80, 80, 80])#,30, 80, 40, 90, 30, 70, 30, 40, 80, 20, 20, 50 ]
+prefaceStaircaseTrialsN = 10
+prefaceStaircaseNoise = np.array([2, 2, 5, 5, 10, 80, 80, 80]) #will be recycled / not all used as needed
+#,30, 80, 40, 90, 30, 70, 30, 40, 80, 20, 20, 50 ]
 
 bgColor = [-.7,-.7,-.7] # [-1,-1,-1]
 cueColor = [1.,1.,1.]
@@ -163,8 +164,8 @@ if not autopilot:
     myDlg.addField('Subject name (default="Hubert"):', tip='or subject code')
     dlgLabelsOrdered.append('subject')
 if doStaircase:
-    easyTrialsCondText = 'Num preassigned noise trials to preface staircase with (default=' + str(nEasyStaircaseStarterTrials) + '):'
-    myDlg.addField(easyTrialsCondText, tip=str(nEasyStaircaseStarterTrials))
+    easyTrialsCondText = 'Num preassigned noise trials to preface staircase with (default=' + str(prefaceStaircaseTrialsN) + '):'
+    myDlg.addField(easyTrialsCondText, tip=str(prefaceStaircaseTrialsN))
     dlgLabelsOrdered.append('easyTrials')
     myDlg.addField('Staircase trials (default=' + str(staircaseTrials) + '):', tip="Staircase will run until this number is reached or it thinks it has precise estimate of threshold")
     dlgLabelsOrdered.append('staircaseTrials')
@@ -207,9 +208,9 @@ if myDlg.OK: #unpack information from dialogue box
            print('staircaseTrials entered by user=',staircaseTrials)
            logging.info('staircaseTrials entered by user=',staircaseTrials)
        if len(thisInfo[dlgLabelsOrdered.index('easyTrials')]) >0:
-           nEasyStaircaseStarterTrials = int( thisInfo[ dlgLabelsOrdered.index('easyTrials') ] ) #convert string to integer
-           print('nEasyStaircaseStarterTrials entered by user=',thisInfo[dlgLabelsOrdered.index('easyTrials')])
-           logging.info('nEasyStaircaseStarterTrials entered by user=',nEasyStaircaseStarterTrials)
+           prefaceStaircaseTrialsN = int( thisInfo[ dlgLabelsOrdered.index('easyTrials') ] ) #convert string to integer
+           print('prefaceStaircaseTrialsN entered by user=',thisInfo[dlgLabelsOrdered.index('easyTrials')])
+           logging.info('prefaceStaircaseTrialsN entered by user=',prefaceStaircaseTrialsN)
    else:
         defaultNoiseLevel = int (thisInfo[ dlgLabelsOrdered.index('defaultNoiseLevel') ])
 else: 
@@ -730,12 +731,11 @@ if doStaircase:
                                   nTrials=1)
         print('created conventional staircase')
         
-    easyStaircaseStarterNoise = np.array([2, 5, 10, 80])#,30, 80, 40, 90, 30, 70, 30, 40, 80, 20, 20, 50 ]
-    if nEasyStaircaseStarterTrials > len(easyStaircaseStarterNoise): #repeat array to accommodate desired number of easyStarterTrials
-        easyStaircaseStarterNoise = np.tile( easyStaircaseStarterNoise, ceil( nEasyStaircaseStarterTrials/len(easyStaircaseStarterNoise) ) )
-    easyStaircaseStarterNoise = easyStaircaseStarterNoise[0:nEasyStaircaseStarterTrials]
+    if prefaceStaircaseTrialsN > len(prefaceStaircaseNoise): #repeat array to accommodate desired number of easyStarterTrials
+        prefaceStaircaseNoise = np.tile( prefaceStaircaseNoise, ceil( prefaceStaircaseTrialsN/len(prefaceStaircaseNoise) ) )
+    prefaceStaircaseNoise = prefaceStaircaseNoise[0:prefaceStaircaseTrialsN]
     
-    phasesMsg = ('Starting with '+str(nEasyStaircaseStarterTrials)+' of noise= '+str(easyStaircaseStarterNoise)+' then doing a max '+str(staircaseTrials)+'-trial staircase' +
+    phasesMsg = ('Starting with '+str(prefaceStaircaseTrialsN)+' of noise= '+str(prefaceStaircaseNoise)+' then doing a max '+str(staircaseTrials)+'-trial staircase' +
                             ' followed by '+str(trials.nTotal)+' trials at that noise level') #parentheses purely for line continuation
     print(phasesMsg); logging.info(phasesMsg)
     
@@ -743,14 +743,14 @@ if doStaircase:
     corrEachTrial = list() #only needed for easyStaircaseStarterNoise
     staircaseTrialN = -1; mainStaircaseGoing = False
     while (not staircase.finished) and expStop==False: #staircase.thisTrialN < staircase.nTrials
-        if staircaseTrialN+1 < len(easyStaircaseStarterNoise): #still doing easyStaircaseStarterNoise
+        if staircaseTrialN+1 < len(prefaceStaircaseNoise): #still doing easyStaircaseStarterNoise
             staircaseTrialN += 1
-            percentNoise = easyStaircaseStarterNoise[staircaseTrialN]
+            percentNoise = prefaceStaircaseNoise[staircaseTrialN]
         else:
-            if staircaseTrialN+1 == len(easyStaircaseStarterNoise): #add these non-staircase trials so QUEST knows about them
+            if staircaseTrialN+1 == len(prefaceStaircaseNoise): #add these non-staircase trials so QUEST knows about them
                 mainStaircaseGoing = True
-                print('Readying to import ',corrEachTrial,' and intensities ',easyStaircaseStarterNoise)
-                staircase.importData(100-easyStaircaseStarterNoise, np.array(corrEachTrial)) 
+                print('Readying to import ',corrEachTrial,' and intensities ',prefaceStaircaseNoise)
+                staircase.importData(100-prefaceStaircaseNoise, np.array(corrEachTrial)) 
             try: #advance the staircase
                 printStaircaseStuff(staircase, briefTrialUpdate=True, alsoLog=False)
                 percentNoise = 100. - staircase.next()  #will step through the staircase, based on whether told it (addResponse) got it right or wrong
