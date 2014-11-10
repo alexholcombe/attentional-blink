@@ -20,13 +20,13 @@ import itertools, time, sys, os
 tasks=['T1','T1T2']; task = tasks[1]
 refreshRate=60 #90 Hz used by Paolo  #set to the framerate of the monitor
 #THINGS THAT COULD PREVENT SUCCESS ON A STRANGE MACHINE
-#same screen or external screen? scrn
+#same screen or external screen? Set scrn=0 if one screen. scrn=1 means display stimulus on second screen.
 #Hz wrong, widthPix, heightPix
 quitFinder = False #checkRefreshEtc
 autopilot=False
 demo=False #False
 exportImages= False #quits after one trial
-subject='Hubert' #user is prompted to enter replacement name
+subject='Hubert' #user is prompted to enter true subject name
 if autopilot: subject='auto'
 if os.path.isdir('.'+os.sep+'data'):
     dataDir='data'
@@ -35,7 +35,7 @@ else:
     dataDir='.'
 timeAndDateStr = time.strftime("%d%b%Y_%H-%M", time.localtime())
 
-showRefreshMisses=True #flicker fixation at refresh rate, so visualize missed frames
+showRefreshMisses=True #flicker fixation at refresh rate, to visualize if frames missed
 feedback=False #Martini didn't include feedback
 autoLogging=False
 if demo:
@@ -43,7 +43,7 @@ if demo:
 
 staircaseTrials = 4
 prefaceStaircaseTrialsN = 10
-prefaceStaircaseNoise = np.array([2, 2, 5, 5, 10, 80, 80, 80]) #will be recycled / not all used as needed
+prefaceStaircaseNoise = np.array([2, 2, 5, 5, 10, 80, 80, 80]) #will be recycled / not all used, as needed
 #,30, 80, 40, 90, 30, 70, 30, 40, 80, 20, 20, 50 ]
 
 bgColor = [-.7,-.7,-.7] # [-1,-1,-1]
@@ -63,7 +63,7 @@ ISIframes = int( np.floor(ISIms / (1000./refreshRate)) )
 #have set ISIframes and letterDurFrames to integer that corresponds as close as possible to originally intended ms
 rateInfo = 'total SOA=' + str(round(  (ISIframes + letterDurFrames)*1000./refreshRate, 2)) + ' or ' + str(ISIframes + letterDurFrames) + ' frames, comprising\n'
 rateInfo+=  'ISIframes ='+str(ISIframes)+' or '+str(ISIframes*(1000./refreshRate))+' ms and letterDurFrames ='+str(letterDurFrames)+' or '+str(round( letterDurFrames*(1000./refreshRate), 2))+'ms'
-print(rateInfo)
+logging.info(rateInfo); print(rateInfo)
 
 trialDurFrames = int( numLettersToPresent*(ISIframes+letterDurFrames) ) #trial duration in frames
 
@@ -104,7 +104,6 @@ infoDlg = gui.DlgFromDict(dictionary=info,
     )
 doStaircase = info['Staircase percent noise dots']
 checkRefreshEtc = info['Check refresh etc']
-
 if checkRefreshEtc:
     quitFinder = True
 
@@ -118,7 +117,7 @@ refreshMsg2 = ''
 if not checkRefreshEtc:
     refreshMsg1 = 'REFRESH RATE WAS NOT CHECKED'
     refreshRateWrong = False
-else: #checkRefresh
+else: #checkRefreshEtc
     runInfo = psychopy.info.RunTimeInfo(
             # if you specify author and version here, it overrides the automatic detection of __author__ and __version__ in your script
             #author='<your name goes here, plus whatever you like, e.g., your lab or contact info>',
@@ -237,8 +236,6 @@ if demo or exportImages:
   logging.console.setLevel(logging.ERROR)  #only show this level  messages and higher
 logging.console.setLevel(logging.ERROR) #DEBUG means set  console to receive nearly all messges, INFO next level, EXP, DATA, WARNING and ERROR 
 
-logging.info(rateInfo)
-
 if fullscr and not demo and not exportImages:
     runInfo = psychopy.info.RunTimeInfo(
         # if you specify author and version here, it overrides the automatic detection of __author__ and __version__ in your script
@@ -279,6 +276,7 @@ respText = visual.TextStim(myWin,pos=(0,0),colorSpace='rgb',color=(1,1,0),alignH
 screenshot= False; screenshotDone = False
 stimList = []
 
+#SETTING THE CONDITIONS
 possibleCue1positions = np.array([6,7,8,9,10]) # [4,10,16,22] used in Martini E2, group 2
 possibleCue2lags = np.array([1,2,5,8,10])   #[1,2,5,10]
 for cue1pos in possibleCue1positions:
@@ -293,7 +291,6 @@ numRightWrongEachCue2lag = np.zeros([ len(possibleCue2lags), 1 ]); #summary resu
 
 logging.info( 'numtrials=' + str(trials.nTotal) + ' and each trialDurFrames='+str(trialDurFrames)+' or '+str(trialDurFrames*(1000./refreshRate))+ \
                ' ms' + '  task=' + task)
-print(' numtrials=', trials.nTotal)
 
 def numberToLetter(number): #0 = A, 25 = Z
     #if it's not really a letter, return @
@@ -383,7 +380,7 @@ def printStaircaseStuff(staircase, briefTrialUpdate, alsoLog=False):
         #the internal function used to advance to the next trial.
     
 def createNoiseArray(proportnNoise,fieldWidthPix,noiseColor): 
-    #noiseColor, assumed that colorSpace='rgb', triple between -1 and 1
+    #noiseColor, assumes that colorSpace='rgb', triple between -1 and 1
     numDots = int(proportnNoise*fieldWidthPix*fieldWidthPix)
     if numDots ==0:
         return None
@@ -695,17 +692,6 @@ if doStaircase:
     #create the staircase handler
     useQuest = True
     if  useQuest:
-        chrisFajouQuestWorks = data.QuestHandler(startVal = 0.95, startValSd = 0.75,
-                              stopInterval=0.3,
-                              nTrials=10,
-                              #extraInfo = thisInfo,
-                              pThreshold = 0.25,    
-                              gamma = 1./26,
-                              delta=0.02, #lapse rate, I suppose for Weibull function fit
-                              method = 'mean',
-                              stepType = 'lin',  #will home in on the 80% threshold. But stepType = 'log' doesn't usually work
-                              minVal=0.01, maxVal = 1.0
-                              )
         staircase = data.QuestHandler(startVal = 95, 
                               startValSd = 80,
                               stopInterval= 1, #sd of posterior has to be this small or smaller for staircase to stop, unless nTrials reached
@@ -820,7 +806,7 @@ while nDoneAfterStaircase < trials.nTotal and expStop==False:
     if not expStop:
         print('main\t', end='', file=dataFile) #first thing printed on each line of dataFile
         print(nDoneAfterStaircase,'\t', end='', file=dataFile)
-        print(subject,'\t',task,'\t', round(percentNoise,3),'\t', end='', file=dataFile)
+        print(subject,'\t',task,'\t', round(noisePercent,3),'\t', end='', file=dataFile)
         correct,eachCorrect,eachApproxCorrect,T1approxCorrect,passThisTrial,expStop = (
                 handleAndScoreResponse(passThisTrial,responses,responsesAutopilot,task,letterSequence,cuesPos,correctAnswers) )
         print(numCasesInterframeLong, file=dataFile) #timingBlips, last thing recorded on each line of dataFile
