@@ -1,6 +1,6 @@
 #Jan 2012 start. Implementation of attentional blink task. Also see Martini 2012 Attention Perception & Psychophysics "SOURCES OF BIAS AND UNCERTAINTY IN A VISUAL TEMPORAL INDIVIDUATION TASK"
 #Alex Holcombe alex.holcombe@sydney.edu.au
-#licensing: CC-BY whch means do whatever you want with it, with an attribution to the author. If you want permission to use it without attribution, contact me.
+#licensing: CC-BY which means do whatever you want with it, with an attribution to the author. If you want permission to use it without attribution, contact me.
 #5 Nov. Starting with non-git AB_addNoise_QUEST2.py
 from __future__ import print_function
 from psychopy import monitors, visual, event, data, logging, core, sound, gui
@@ -25,7 +25,7 @@ refreshRate=60 #90 Hz used by Paolo  #set to the framerate of the monitor
 quitFinder = False #checkRefreshEtc
 demo=False #False
 exportImages= False #quits after one trial
-autopilot=False
+autopilot=True
 subject='Hubert' #user is prompted to enter replacement name
 if autopilot: subject='auto'
 if os.path.isdir('.'+os.sep+'data'):
@@ -116,7 +116,7 @@ if quitFinder:
 
 refreshMsg2 = ''
 if not checkRefreshEtc:
-    refreshMsg1 = 'REFRESH RATE NOT CHECKED'
+    refreshMsg1 = 'REFRESH RATE WAS NOT CHECKED'
     refreshRateWrong = False
 else: #checkRefresh
     runInfo = psychopy.info.RunTimeInfo(
@@ -416,6 +416,7 @@ def createNoiseArray(proportnNoise,fieldWidthPix,noiseColor):
 
 #print header for data file
 print('experimentPhase\ttrialnum\tsubject\ttask\t',file=dataFile,end='')
+print('noisePercent\t',end='',file=dataFile)
 if task=='T1':
     numRespsWanted = 1
 elif task=='T1T2':
@@ -659,8 +660,7 @@ def handleAndScoreResponse(passThisTrial,responses,responsesAutopilot,task,lette
         posOfResponse[i]= posThisResponse
         responsePosRelative[i] = posOfResponse[i] - cuesPos[i]
         eachApproxCorrect[i] +=   abs(responsePosRelative[i]) <= 3 #Vul efficacy measure of getting it right to within plus/minus 
-    #header start      'trialnum\tsubject\ttask\t'
-    print(subject,'\t',task,'\t', end='', file=dataFile)
+
     for i in range(len(cuesPos)): #print response stuff to dataFile
         #header was answerPos0, answer0, response0, correct0, responsePosRelative0
         print(cuesPos[i],'\t', end='', file=dataFile)
@@ -771,7 +771,9 @@ if doStaircase:
                 print('staircase\t', end='', file=dataFile)
             else: 
                 print('staircase_starterNoise\t', end='', file=dataFile)
+             #header start      'trialnum\tsubject\ttask\t'
             print(staircaseTrialN,'\t', end='', file=dataFile) #first thing printed on each line of dataFile
+            print(subject,'\t',task,'\t', percentNoise,'\t', end='', file=dataFile)
             correct,eachCorrect,eachApproxCorrect,T1approxCorrect,passThisTrial,expStop = (
                     handleAndScoreResponse(passThisTrial,responses,responsesAutopilot,task,letterSequence,cuesPos,correctAnswers) )
             #print('Scored response. expStop=',expStop) #debug
@@ -817,7 +819,8 @@ while nDoneAfterStaircase < trials.nTotal and expStop==False:
                 collectResponses(task,numRespsWanted,responseDebug=True)
     if not expStop:
         print('main\t', end='', file=dataFile) #first thing printed on each line of dataFile
-        print(nDoneAfterStaircase,'\t', end='', file=dataFile) 
+        print(nDoneAfterStaircase,'\t', end='', file=dataFile)
+        print(subject,'\t',task,'\t', percentNoise,'\t', end='', file=dataFile)
         correct,eachCorrect,eachApproxCorrect,T1approxCorrect,passThisTrial,expStop = (
                 handleAndScoreResponse(passThisTrial,responses,responsesAutopilot,task,letterSequence,cuesPos,correctAnswers) )
         print(numCasesInterframeLong, file=dataFile) #timingBlips, last thing recorded on each line of dataFile
