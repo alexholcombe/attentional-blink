@@ -200,7 +200,7 @@ if myDlg.OK: #unpack information from dialogue box
        if len(name) > 0: #if entered something
          subject = name #change subject default name to what user entered
    if len(thisInfo[dlgLabelsOrdered.index('trialsPerCondition')]) > 0: #if entered something for trialsPerCondition
-       trialsPerCondition = int( thisInfo[trialsField] ) #convert string to integer
+       trialsPerCondition = int( thisInfo[ dlgLabelsOrdered.index('trialsPerCondition') ] ) #convert string to integer
        print('trialsPerCondition entered by user=',trialsPerCondition)
        logging.info('trialsPerCondition entered by user=',trialsPerCondition)
    if doStaircase:
