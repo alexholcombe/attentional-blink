@@ -71,15 +71,15 @@ widthPix= 1024 #1280 #monitor width in pixels
 heightPix= 768  #800 #800 #monitor height in pixels
 monitorwidth = 38.7 #monitor width in cm
 scrn=0 #0 to use main screen, 1 to use external screen connected to computer
-fullscr=0 #1
+fullscr=False #True to use fullscreen, False to not. Timing probably won't be quite right if fullscreen = False
 allowGUI = False
 if demo: monitorwidth = 23#18.0
 if exportImages:
     widthPix = 400; heightPix = 400
     monitorwidth = 13.0
-    fullscr=0; scrn=0
+    fullscr=False; scrn=0
 if demo:    
-    scrn=0; fullscr=0
+    scrn=0; fullscr=False
     widthPix = 800; heightPix = 600
     monitorname='testMonitor'
     allowGUI = True
@@ -87,12 +87,6 @@ viewdist = 57. #cm
 pixelperdegree = widthPix/ (atan(monitorwidth/viewdist) /np.pi*180)
 print('pixelperdegree=',pixelperdegree)
 
-monitorname = 'testmonitor'
-waitBlank = False
-mon = monitors.Monitor(monitorname,width=monitorwidth, distance=viewdist)#relying on  monitorwidth cm (39 for Mitsubishi to do deg calculations) and gamma info in calibratn
-mon.setSizePix( (widthPix,heightPix) )
-units='deg' #'cm'
-myWin = visual.Window(monitor=mon,size=(widthPix,heightPix),allowGUI=allowGUI,units=units,color=bgColor,colorSpace='rgb',fullscr=fullscr,screen=scrn,waitBlanking=waitBlank) #Holcombe lab monitor
 
 # create a DlgFromDict
 info = { 'Staircase percent noise dots': True, 'Check refresh etc':True }
@@ -106,12 +100,18 @@ doStaircase = info['Staircase percent noise dots']
 checkRefreshEtc = info['Check refresh etc']
 if checkRefreshEtc:
     quitFinder = True
-
 if quitFinder:
     import os
     applescript="\'tell application \"Finder\" to quit\'"
     shellCmd = 'osascript -e '+applescript
     os.system(shellCmd)
+
+monitorname = 'testmonitor'
+waitBlank = False
+mon = monitors.Monitor(monitorname,width=monitorwidth, distance=viewdist)#relying on  monitorwidth cm (39 for Mitsubishi to do deg calculations) and gamma info in calibratn
+mon.setSizePix( (widthPix,heightPix) )
+units='deg' #'cm'
+myWin = visual.Window(monitor=mon,size=(widthPix,heightPix),allowGUI=allowGUI,units=units,color=bgColor,colorSpace='rgb',fullscr=fullscr,screen=scrn,waitBlanking=waitBlank) #Holcombe lab monitor
 
 refreshMsg2 = ''
 if not checkRefreshEtc:
@@ -154,7 +154,7 @@ else: #checkRefreshEtc
     myWinRes = myWin.size
     myWin.allowGUI =True
 myWin.close() #have to close window to show dialog box
-
+STOP
 defaultNoiseLevel = 0.0 #to use if no staircase, set by user
 trialsPerCondition = 1 #8 #default value
 dlgLabelsOrdered = list()
@@ -169,7 +169,7 @@ if doStaircase:
     myDlg.addField('Staircase trials (default=' + str(staircaseTrials) + '):', tip="Staircase will run until this number is reached or it thinks it has precise estimate of threshold")
     dlgLabelsOrdered.append('staircaseTrials')
 else:
-    myDlg.addField('\tDefault (if NO to staircase) percent noise dots=',  defaultNoiseLevel, tip=str(defaultNoiseLevel))
+    myDlg.addField('\tPercent noise dots=',  defaultNoiseLevel, tip=str(defaultNoiseLevel))
     dlgLabelsOrdered.append('defaultNoiseLevel')
 
 myDlg.addField('Trials per condition (default=' + str(trialsPerCondition) + '):', tip=str(trialsPerCondition))
@@ -731,7 +731,7 @@ if doStaircase:
     while (not staircase.finished) and expStop==False: #staircase.thisTrialN < staircase.nTrials
         if staircaseTrialN+1 < len(prefaceStaircaseNoise): #still doing easyStaircaseStarterNoise
             staircaseTrialN += 1
-            percentNoise = prefaceStaircaseNoise[staircaseTrialN]
+            noisePercent = prefaceStaircaseNoise[staircaseTrialN]
         else:
             if staircaseTrialN+1 == len(prefaceStaircaseNoise): #add these non-staircase trials so QUEST knows about them
                 mainStaircaseGoing = True
@@ -739,14 +739,14 @@ if doStaircase:
                 staircase.importData(100-prefaceStaircaseNoise, np.array(corrEachTrial)) 
             try: #advance the staircase
                 printStaircaseStuff(staircase, briefTrialUpdate=True, alsoLog=False)
-                percentNoise = 100. - staircase.next()  #will step through the staircase, based on whether told it (addResponse) got it right or wrong
-                print('Staircase advanced, percentNoise for this trial = ', np.around(percentNoise,2)) #debugON
+                noisePercent = 100. - staircase.next()  #will step through the staircase, based on whether told it (addResponse) got it right or wrong
+                print('Staircase advanced, noisePercent for this trial = ', np.around(noisePercent,2)) #debugON
                 staircaseTrialN += 1
             except StopIteration: #Need this here, even though test for finished above. I can't understand why finished test doesn't accomplish this.
                 print('stopping because staircase.next() returned a StopIteration, which it does when it is finished')
                 break #break out of the trials loop
         #print('staircaseTrialN=',staircaseTrialN)
-        letterSequence,cuesPos,correctAnswers, ts  = do_RSVP_stim(cue1pos, cue2lag, percentNoise/100.,staircaseTrialN)
+        letterSequence,cuesPos,correctAnswers, ts  = do_RSVP_stim(cue1pos, cue2lag, noisePercent/100.,staircaseTrialN)
         numCasesInterframeLong = timingCheckAndLog(ts,staircaseTrialN)
         
         responseDebug=False; responses = list(); responsesAutopilot = list();
@@ -759,7 +759,7 @@ if doStaircase:
                 print('staircase_preface\t', end='', file=dataFile)
              #header start      'trialnum\tsubject\ttask\t'
             print(staircaseTrialN,'\t', end='', file=dataFile) #first thing printed on each line of dataFile
-            print(subject,'\t',task,'\t', round(percentNoise,3),'\t', end='', file=dataFile)
+            print(subject,'\t',task,'\t', round(noisePercent,3),'\t', end='', file=dataFile)
             correct,eachCorrect,eachApproxCorrect,T1approxCorrect,passThisTrial,expStop = (
                     handleAndScoreResponse(passThisTrial,responses,responsesAutopilot,task,letterSequence,cuesPos,correctAnswers) )
             #print('Scored response. expStop=',expStop) #debug
@@ -770,8 +770,8 @@ if doStaircase:
             print('expStop=',expStop,'   T1approxCorrect=',T1approxCorrect) #debugON
             corrEachTrial.append(T1approxCorrect)
             if mainStaircaseGoing: 
-                staircase.addResponse(T1approxCorrect, intensity = 100-percentNoise) #Add a 1 or 0 to signify a correct/detected or incorrect/missed trial
-                #print('Have added an intensity of','{:.3f}'.format(100-percentNoise), 'T1approxCorrect =', T1approxCorrect, ' to staircase') #debugON
+                staircase.addResponse(T1approxCorrect, intensity = 100-noisePercent) #Add a 1 or 0 to signify a correct/detected or incorrect/missed trial
+                #print('Have added an intensity of','{:.3f}'.format(100-noisePercent), 'T1approxCorrect =', T1approxCorrect, ' to staircase') #debugON
     #ENDING STAIRCASE PHASE
     timeAndDateStr = time.strftime("%H:%M on %d %b %Y", time.localtime())
     msg= ('ABORTED' if expStop else 'Finished') + ' staircase part of experiment at ' + timeAndDateStr
@@ -826,7 +826,7 @@ while nDoneAfterStaircase < trials.nTotal and expStop==False:
         nDoneAfterStaircase+=1
         
         dataFile.flush(); logging.flush()
-        print('nDoneAfterStaircase=', nDoneAfterStaircase,' trials.thisN=',trials.thisN,' trials.nTotal=',trials.nTotal)
+        print('nDoneAfterStaircase=', nDoneAfterStaircase,' trials.nTotal=',trials.nTotal) #' trials.thisN=',trials.thisN,
         core.wait(.2); time.sleep(.2)
     #end trials loop
 timeAndDateStr = time.strftime("%H:%M on %d %b %Y", time.localtime())
@@ -837,7 +837,7 @@ if expStop:
     print(msg); logging.error(msg)
 
 if nDoneAfterStaircase >0:
-    print('Of ',nDoneAfterStaircase,' trials, ',numTrialsCorrect*1.0/nDoneAfterStaircase*100., '% exactly correct',sep='')
+    print('Of ',nDoneAfterStaircase,' trials, ',numTrialsCorrect*1.0/nDoneAfterStaircase*100., '% all targets exactly correct',sep='')
     print('All targets approximately correct in ',round(numTrialsApproxCorrect*1.0/nDoneAfterStaircase*100,1),'% of trials',sep='')
     print('T1: ',round(numTrialsEachCorrect[0]*1.0/nDoneAfterStaircase*100.,2), '% correct',sep='')
     if len(numTrialsEachCorrect) >1:
