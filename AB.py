@@ -22,7 +22,7 @@ refreshRate=60 #90 Hz used by Paolo  #set to the framerate of the monitor
 #THINGS THAT COULD PREVENT SUCCESS ON A STRANGE MACHINE
 #same screen or external screen? Set scrn=0 if one screen. scrn=1 means display stimulus on second screen.
 #Hz wrong, widthPix, heightPix
-quitFinder = False #checkRefreshEtc
+quitFinder = False #if checkRefreshEtc, quitFinder becomes True
 autopilot=False
 demo=False #False
 exportImages= False #quits after one trial
@@ -71,7 +71,7 @@ widthPix= 1024 #1280 #monitor width in pixels
 heightPix= 768  #800 #800 #monitor height in pixels
 monitorwidth = 38.7 #monitor width in cm
 scrn=0 #0 to use main screen, 1 to use external screen connected to computer
-fullscr=False #True to use fullscreen, False to not. Timing probably won't be quite right if fullscreen = False
+fullscr=True #True to use fullscreen, False to not. Timing probably won't be quite right if fullscreen = False
 allowGUI = False
 if demo: monitorwidth = 23#18.0
 if exportImages:
@@ -99,7 +99,7 @@ infoDlg = gui.DlgFromDict(dictionary=info,
 doStaircase = info['Staircase percent noise dots']
 checkRefreshEtc = info['Check refresh etc']
 if checkRefreshEtc:
-    quitFinder = True
+    quitFinder = True # False #debugON 
 if quitFinder:
     import os
     applescript="\'tell application \"Finder\" to quit\'"
@@ -129,11 +129,12 @@ else: #checkRefreshEtc
             )
     #print(runInfo)
     logging.info(runInfo)
-
+    print('Finished runInfo') #debugON
     #check screen refresh is what assuming it is ##############################################
     Hzs=list()
     myWin.flip(); myWin.flip();myWin.flip();myWin.flip();
     myWin.setRecordFrameIntervals(True) #otherwise myWin.fps won't work
+    print('About to measure frame flips') #debugON
     for i in range(50):
         myWin.flip()
         Hzs.append( myWin.fps() )  #varies wildly on successive runs!
@@ -154,7 +155,8 @@ else: #checkRefreshEtc
     myWinRes = myWin.size
     myWin.allowGUI =True
 myWin.close() #have to close window to show dialog box
-STOP
+#core.wait(.5); #debugON
+#STOP
 defaultNoiseLevel = 0.0 #to use if no staircase, set by user
 trialsPerCondition = 1 #8 #default value
 dlgLabelsOrdered = list()
