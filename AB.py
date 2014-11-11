@@ -14,7 +14,7 @@ refreshRate=60 #90 Hz used by Paolo  #set to the framerate of the monitor
 #same screen or external screen? Set scrn=0 if one screen. scrn=1 means display stimulus on second screen.
 #Hz wrong, widthPix, heightPix
 quitFinder = False #if checkRefreshEtc, quitFinder becomes True
-autopilot=True
+autopilot=False
 demo=False #False
 exportImages= False #quits after one trial
 subject='Hubert' #user is prompted to enter true subject name
@@ -78,17 +78,16 @@ viewdist = 57. #cm
 pixelperdegree = widthPix/ (atan(monitorwidth/viewdist) /np.pi*180)
 print('pixelperdegree=',pixelperdegree)
 
-
-# create a DlgFromDict
-info = { 'Staircase percent noise dots': True, 'Check refresh etc':True }
-infoDlg = gui.DlgFromDict(dictionary=info, 
+# create a dialog from dictionary 
+infoFirst = { 'Staircase percent noise dots': True, 'Check refresh etc':True }
+gui.DlgFromDict(dictionary=infoFirst, 
     title='Attentional Blink, with optional staircase to find noise level to reduce T1 performance down to threshold', 
     order=['Staircase percent noise dots', 'Check refresh etc'], 
     tip={'Check refresh etc': 'To confirm refresh rate and that can keep up, at least when drawing a grating'},
     #fixed=['Check refresh etc'])#this attribute can't be changed by the user
     )
-doStaircase = info['Staircase percent noise dots']
-checkRefreshEtc = info['Check refresh etc']
+doStaircase = infoFirst['Staircase percent noise dots']
+checkRefreshEtc = infoFirst['Check refresh etc']
 if checkRefreshEtc:
     quitFinder = True # False #debugON 
 if quitFinder:
@@ -733,7 +732,6 @@ if doStaircase:
             try: #advance the staircase
                 printStaircaseStuff(staircase, briefTrialUpdate=True, alsoLog=False)
                 noisePercent = 100. - staircase.next()  #will step through the staircase, based on whether told it (addResponse) got it right or wrong
-                print('Staircase advanced, noisePercent for this trial = ', np.around(noisePercent,2)) #debugON
                 staircaseTrialN += 1
             except StopIteration: #Need this here, even though test for finished above. I can't understand why finished test doesn't accomplish this.
                 print('stopping because staircase.next() returned a StopIteration, which it does when it is finished')
@@ -752,7 +750,7 @@ if doStaircase:
                 print('staircase_preface\t', end='', file=dataFile)
              #header start      'trialnum\tsubject\ttask\t'
             print(staircaseTrialN,'\t', end='', file=dataFile) #first thing printed on each line of dataFile
-            print(subject,'\t',task,'\t', round(noisePercent,3),'\t', end='', file=dataFile)
+            print(subject,'\t',task,'\t', round(noisePercent,2),'\t', end='', file=dataFile)
             correct,eachCorrect,eachApproxCorrect,T1approxCorrect,passThisTrial,expStop = (
                     handleAndScoreResponse(passThisTrial,responses,responsesAutopilot,task,letterSequence,cuesPos,correctAnswers) )
             #print('Scored response. expStop=',expStop) #debug
@@ -760,7 +758,7 @@ if doStaircase:
             core.wait(.06)
             if feedback: 
                 play_high_tone_correct_low_incorrect(correct, passThisTrial=False)
-            print('expStop=',expStop,'   T1approxCorrect=',T1approxCorrect) #debugON
+            print('staircaseTrialN=', staircaseTrialN,' noisePercent=',round(noisePercent,3),' T1approxCorrect=',T1approxCorrect) #debugON
             corrEachTrial.append(T1approxCorrect)
             if mainStaircaseGoing: 
                 staircase.addResponse(T1approxCorrect, intensity = 100-noisePercent) #Add a 1 or 0 to signify a correct/detected or incorrect/missed trial

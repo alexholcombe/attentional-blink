@@ -23,3 +23,7 @@ Also, experiment 1b was run with T1 fixed, i.e. the cue was always in the midstr
 For published analyses of serial position errors, also see 
 * Martini (2012) Attention Perception & Psychophysics "SOURCES OF BIAS AND UNCERTAINTY IN A VISUAL TEMPORAL INDIVIDUATION TASK"
 * Goodbourn & Holcombe (2014 in press).  Journal of Experimental Psychology: Human Perception & Performance
+
+#Staircase piloting notes
+Alex with glasses off, targeted 90% correct with staircase.
+Started with 20 trials of noise= [ 2  2  5  5 10 80 80 80  2  2  5  5 10 80 80 80] then a max 20-trial staircase followed by 25 trials at that noise level. Yielded 85% approx correct for T1.
