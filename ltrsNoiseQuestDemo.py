@@ -7,11 +7,9 @@ so I use percentNoise (0->100) instead of proportion
 """
 from __future__ import print_function
 from psychopy import core, visual, event, misc, data
-import numpy
 import numpy as np
 from math import atan, log
-from copy import deepcopy
-import itertools
+from noiseStaircaseHelpers import printStaircase, createNoise
 
 def numberToLetter(number): #0 = A, 25 = Z
     #if it's not really a letter, return @
@@ -39,7 +37,7 @@ bgColor = [-1.,-1.,-1.] # [-1,-1,-1]
 cueColor = [1.,1.,1.]
 letterColor = [1.,1.,1.]
 ltrHeight = 2.5
-pixelperdegree = widthPix/ (atan(monitorwidth/viewdist) /numpy.pi*180)
+pixelperdegree = widthPix/ (atan(monitorwidth/viewdist) /np.pi*180)
 
 #INITIALISE SOME STIMULI
 #predraw all 26 letters 
@@ -59,167 +57,7 @@ fieldWidthPix = int( round( fieldWidthDeg*pixelperdegree ) )
 #create a grid of xy vals
 proportnNoise = 0.1
 
-#def createNoiseArray(proportnNoise,fieldWidthPix): 
-#    numDots = int(proportnNoise*fieldWidthPix*fieldWidthPix)
-#    if numDots ==0:
-#        return None
-#    #create a matrix of all possible pixel locations, shuffle it, pick off the first numDots ones
-#    #0,0 is center of field
-#    possibleXcoords = -fieldWidthPix/2 + np.arange(fieldWidthPix)
-#    possibleYcoords = deepcopy(possibleXcoords)
-#    def expandgrid(*itrs):
-#       product = list(itertools.product(*itrs))
-#       return product
-#    allFieldCoords = expandgrid(possibleXcoords,possibleYcoords)
-#    #shuffle it
-#    np.random.shuffle(allFieldCoords)
-#    dotCoords = allFieldCoords[0:numDots]
-#
-#    #xys = numpy.random.random([numDots,2])*fieldWidthPix-fieldWidthPix/2.0 #this way yields many dots in the same locations
-#    #create opacity for each dot
-#    opacs = numpy.ones(numDots)#all opaque
-#    verticalAdjust = 3 #number of pixels to raise rectangle by. Using only uppercase letters and seem to be drawn above the line
-#    horizontalAdjust = 3
-#    mask = visual.ElementArrayStim(myWin,units='pix', elementTex=None, elementMask=None,
-#        nElements=numDots, fieldSize=[fieldWidthPix,fieldWidthPix],
-#        fieldPos=(horizontalAdjust, verticalAdjust),
-#        colors=-1, #set to black
-#        xys= dotCoords, 
-#        opacities=opacs,
-#        sizes=1)
-#    return (mask)
-
-def printStaircaseStuff(staircase, briefTrialUpdate, alsoLog=False):
-    #if briefTrialUpdate, don't print everything, just the kind of stuff you like to know after each trial
-    #needs logging as a global variable, otherwise will fail when alsoLog=True
-    msg = 'staircase.data (incorrect/correct)=' + str(staircase.data)
-    print(msg)
-    if alsoLog:     logging.info(msg)
-    
-    if staircase.stepType == 'log':
-        msg = '\tstaircase.intensities (these are log intensities)=['
-        for i in range( len(staircase.intensities) ):
-            msg += '{:.2f} '.format(staircase.intensities[i])
-            #print('{:.2f} '.format(staircase.intensities[i]), end='') #I cant figure out a simpler way to prevent scientific notation
-        msg+= '], exponentiated=['
-        for j in range( len(staircase.intensities) ):
-            msg += '{:.2f} '.format(10**staircase.intensities[j])
-            #print('{:.2f} '.format(10**staircase.intensities[j]), end='') #I cant figure out a simpler way to prevent scientific notation
-        msg+= ']'
-        print(msg)
-        if alsoLog:     logging.info(msg)
-        #print(']')
-    else: #linear steps, so dont have to worry about log
-        msg = 'staircase.intensities =' + str( np.around(staircase.intensities,3) ) 
-        print(msg)
-        if alsoLog:     logging.info(msg)
-        
-    if type(staircase) is data.StairHandler:
-        numReversals = len(staircase.reversalIntensities)
-        msg= 'staircase number of reversals=' + str(numReversals) + '] '
-        msg+= 'reversal noiseProportions=' + str( 1- np.array(staircase.reversalIntensities) )
-        print(msg)
-        if alsoLog:     logging.info(msg)
-        if numReversals>0:
-            numReversalsToAvg = numReversals-1
-            msg= ('mean of final' + str(numReversalsToAvg) + 
-                      ' reversals =' + str( 1-np.average(staircase.reversalIntensities[-numReversalsToAvg:]) ) )
-            print(msg)
-            if alsoLog:     logging.info(msg)
-    elif type(staircase) is data.QuestHandler:
-            #some of below are private initialization variables I'm not really supposed to access
-            if not briefTrialUpdate:
-                msg= ('\tpThreshold (proportion correct for which trying to zero in on the corresponding parameter value) =' +
-                               str(staircase._quest.pThreshold) + '\n')
-                msg+= ('\tstopInterval (min 5-95% confidence interval required for  thresh  before stopping. If both this and nTrials is specified, whichever happens first)='+
-                               str(staircase.stopInterval) + '\n')
-                msg+= '\tstepType=' + str(staircase.stepType) + '\n'
-                msg+= '\tminVal=' + str(staircase.minVal) + '  maxVal=' + str(staircase.maxVal) + '\n'
-                msg+= '\tnTrials=' + str(staircase.nTrials)
-                print(msg)
-                if alsoLog:     logging.info(msg)
-
-    #below applies to both types of staircase
-    if staircase.thisTrialN == -1:
-        msg= 'thisTrialN = -1, suggesting you have not started it yet; need to call staircase.next()'
-        print(msg)
-        if alsoLog:     logging.info(msg)
-    else:
-        msg= 'staircase thisTrialN =' + str(staircase.thisTrialN)
-        print(msg)
-        if alsoLog:     logging.info(msg)
-        # staircase.calculateNextIntensity() sounds like something useful to get a preview of the next trial. Instead, seems to be 
-        #the internal function used to advance to the next trial.
-    
-def createNoiseArray(proportnNoise,fieldWidthPix,noiseColor): 
-    #noiseColor, assumes that colorSpace='rgb', triple between -1 and 1
-    numDots = int(proportnNoise*fieldWidthPix*fieldWidthPix)
-    if numDots ==0:
-        return None
-    #create a matrix of all possible pixel locations, shuffle it, pick off the first numDots ones
-    #0,0 is center of field
-    possibleXcoords = -fieldWidthPix/2 + np.arange(fieldWidthPix) 
-    possibleXcoords += fieldWidthPix/30 #adding one-tenth because for some mysterious reason not centered, I guess letters aren't drawn centered
-    possibleYcoords = deepcopy(possibleXcoords)
-    def expandgrid(*itrs):
-       product = list(itertools.product(*itrs))
-       return product
-    allFieldCoords = expandgrid(possibleXcoords,possibleYcoords)
-    #shuffle it
-    np.random.shuffle(allFieldCoords)
-    dotCoords = allFieldCoords[0:numDots]
-
-    #create opacity for each dot
-    opacs = np.ones(numDots)#all opaque
-    verticalAdjust = 3 #number of pixels to raise rectangle by. Using only uppercase letters and seem to be drawn above the line
-    noise = visual.ElementArrayStim(myWin,units='pix', elementTex=None, elementMask=None,
-        nElements=numDots, fieldSize=[fieldWidthPix,fieldWidthPix],
-        fieldPos=(0.0, verticalAdjust),
-        colorSpace='rgb',
-        colors=noiseColor, #set to black
-        xys= dotCoords, 
-        opacities=opacs,
-        sizes=1)
-    return (noise,allFieldCoords,numDots) #Can just use noise, but if want to generate new noise of same coherence level quickly, can just shuffle coords
-
-
-#def printStaircaseStuff(staircase, briefTrialUpdate):
-#    #if briefTrialUpdate, don't print everything, just the kind of stuff you like to know after each trial
-#    print('staircase.data (incorrect/correct)=',staircase.data)
-#    if staircase.stepType == 'log':
-#        print('staircase.intensities (these are log intensities)=[', end='')
-#        for i in range( len(staircase.intensities) ):
-#            print('{:.2f} '.format(staircase.intensities[i]), end='') #I cant figure out a simpler way to prevent scientific notation
-#        print('], exponentiated=[',end='')
-#        for j in range( len(staircase.intensities) ):
-#            print('{:.2f} '.format(10**staircase.intensities[j]), end='') #I cant figure out a simpler way to prevent scientific notation
-#        print(']')
-#    else: #linear steps, so dont have to worry about log
-#        print('staircase.intensities =',np.around(staircase.intensities,3))
-#    if type(staircase) is data.StairHandler:
-#        numReversals = len(staircase.reversalIntensities)
-#        print('number of reversals=',  numReversals)
-#        print('reversal noiseProportions=',1- np.array(staircase.reversalIntensities) )
-#        if numReversals>0:
-#            numReverstalsToAvg = numReversals-1
-#            print('mean of final',numReversalsToAvg,' reversals =',1-np.average(staircase.reversalIntensities[-numReversalsToAvg:]))
-#    elif type(staircase) is data.QuestHandler:
-#            #some are private initialization variables I'm not really supposed to access
-#            if not briefTrialUpdate:
-#                print('pThreshold (proportion correct for which trying to zero in on the corresponding parameter value) =', staircase._quest.pThreshold)
-#                print('stopInterval (min 5-95% confidence interval required for  thresh  before stopping. If both this and nTrials is specified, whichever happens first)=',
-#                            staircase.stopInterval)
-#                print('stepType=', staircase.stepType)
-#                print('minVal=', staircase.minVal, 'maxVal=', staircase.maxVal)
-#                print('nTrials=', staircase.nTrials)
-#    #below applies to both types of staircase
-#    if staircase.thisTrialN == -1:
-#        print('thisTrialN = -1, suggesting you have not started it yet; need to call staircase.next()')
-#    else:
-#        print('thisTrialN (current trial number) =',staircase.thisTrialN)
-#        # staircase.calculateNextIntensity() sounds like something useful to get a preview of the next trial. Instead, seems to be 
-#        #the internal function used to advance to the next trial.
-(noise,allFieldCoords,numNoiseDots) = createNoiseArray(proportnNoise,fieldWidthPix,bgColor)
+(noise,allFieldCoords,numNoiseDots) = createNoise(proportnNoise,myWin,fieldWidthPix,bgColor)
 
 stepSizesLinear = [.2,.2,.1,.1,.05,.05]
 stepSizesLog = [log(1.4,10),log(1.4,10),log(1.3,10),log(1.3,10),log(1.2,10)]
@@ -271,7 +109,7 @@ t=lastFPSupdate=0
 expStop= False
 nEasyStarterTrials = 0
 print('starting staircase with following settings:')
-printStaircaseStuff(staircase,False)
+printStaircase(staircase,False)
 
 doingStaircasePhase = False #First phase of experiment is method of constant stimuli. If use naked QUEST, might converge too soon
 initialNonstaircaseTrials = np.array([2, 5, 10, 80]) # np.array([2, 2, 5, 5, 10, 80, 80, 80])#,30, 80, 40, 90, 30, 70, 30, 40, 80, 20, 20, 50 ]
@@ -304,7 +142,7 @@ while (not staircase.finished) and expStop==False: #staircase.thisTrialN < stair
         message.draw()
         correctIncorrectMessage.draw()
         if refreshNoise:
-            (noise,allFieldCoords,numNoiseDots) = createNoiseArray(percentNoise/100.,fieldWidthPix,bgColor)
+            (noise,allFieldCoords,numNoiseDots) = createNoise(percentNoise/100.,myWin,fieldWidthPix,bgColor)
             refreshNoise = False
             
         t=trialClock.getTime()
@@ -340,7 +178,7 @@ while (not staircase.finished) and expStop==False: #staircase.thisTrialN < stair
                 # an intensity value here indicates that you did not use the recommended intensity in your last trial and the staircase will replace its recorded value with the one you supplied here.
 myWin.close()
 print('Finished.')
-printStaircaseStuff(staircase,True)
+printStaircase(staircase,True)
 
 if staircase.finished:
     print('Staircase was finished')
