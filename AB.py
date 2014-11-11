@@ -1,7 +1,5 @@
-#Jan 2012 start. Implementation of attentional blink task. Also see Martini 2012 Attention Perception & Psychophysics "SOURCES OF BIAS AND UNCERTAINTY IN A VISUAL TEMPORAL INDIVIDUATION TASK"
 #Alex Holcombe alex.holcombe@sydney.edu.au
-#licensing: MIT license, like CC-BY for code which means do whatever you want with it, with an attribution to the author. If you want permission to use it without attribution, contact me.
-#5 Nov. Starting with non-git AB_addNoise_QUEST2.py
+#See the README.md for more information: https://github.com/alexholcombe/attentional-blink/blob/master/README.md
 from __future__ import print_function
 from psychopy import monitors, visual, event, data, logging, core, sound, gui
 import psychopy.info
@@ -9,13 +7,6 @@ import numpy as np
 from math import atan, log, ceil
 from copy import deepcopy
 import itertools, time, sys, os
-#Empirical background:
-#Martini AB data were the averages of 20 undergrads. Each contributed 4 consecutive blocks of 100 trials, total time about 35 minutes. The parameters were identical to Vul 2008, 
-#with a duticycle of 90ms (~11 Hz) and each character shown for 3 frames (33 ms at 90 Hz framerate). Note that in those conditions the bottom of AB at lags 2 and 3 is effectively at chance, so there may be a floor effect there.
-
-#In experiment 1b I used 15Hz streams, 2 blocks of 100 trials, and that takes roughly 12-15 minutes.
-#There is some learning, Martini  measured it in experiment 1a with repeat subjects (graph attached), so you should check whether your effects would be washed out by this. 
-#Also, experiment 1b was run with T1 fixed, i.e. the cue was always in the midstream position.
 
 tasks=['T1','T1T2']; task = tasks[1]
 refreshRate=60 #90 Hz used by Paolo  #set to the framerate of the monitor
@@ -23,7 +14,7 @@ refreshRate=60 #90 Hz used by Paolo  #set to the framerate of the monitor
 #same screen or external screen? Set scrn=0 if one screen. scrn=1 means display stimulus on second screen.
 #Hz wrong, widthPix, heightPix
 quitFinder = False #if checkRefreshEtc, quitFinder becomes True
-autopilot=False
+autopilot=True
 demo=False #False
 exportImages= False #quits after one trial
 subject='Hubert' #user is prompted to enter true subject name
