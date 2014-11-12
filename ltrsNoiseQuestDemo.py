@@ -10,6 +10,8 @@ from psychopy import core, visual, event, misc, data
 import numpy as np
 from math import atan, log
 from noiseStaircaseHelpers import printStaircase, createNoise
+import pylab
+from pandas import Series, DataFrame
 
 def numberToLetter(number): #0 = A, 25 = Z
     #if it's not really a letter, return @
@@ -190,33 +192,60 @@ else:
 print('staircase quantile (median)=','{:.4f}'.format(staircase.quantile()), end='') #gets the median. Prints as floating point with 4 digits of precision
 print('. Proportion noise=','{:.4f}'.format(100-staircase.quantile())) 
 
+
+intensities = staircase.intensities
+responses = staircase.data
+
+intensities = np.array([.7,.7,.7,.7,.7,.8,.8,.8,.8,.9,.9,.9,1.0,1.0,1.0,2.0,2.0,2.0]) #debug, example data
+responses= np.array([0,0,0,0,0 ,     0,1,0,0,     1,1,0,    1,1,1,        1,1,1]) #debug, example data
 #
+expectedMin = 1.0/26
 #fit curve
-#fit = data.FitWeibull(combinedInten, combinedResp, expectedMin=expectedMin,
-#    sems = 1.0/combinedN)
-#smoothInt = pylab.arange(min(combinedInten), max(combinedInten), 0.001)
-#smoothResp = fit.eval(smoothInt)
-#thresh = fit.inverse(threshVal)
-#print thresh
+threshVal = 0.9 #threshVal is proportion correct for which want to estimate the parameter (intenity) level
+fit = data.FitWeibull(intensities, responses, expectedMin=expectedMin,   sems = 1.0/len(intensities))
+#generate psychometric curve
+smoothInt = pylab.arange(min(intensities), max(intensities), 0.001)
+smoothResp = fit.eval(smoothInt)
+thresh = fit.inverse(threshVal)
+thresh = log(100,10) - thresh #QUEST assumes psychometric function ascending, so had to take 100-intensity
+
+#plot each staircase in left hand panel
+pylab.subplot(121)
+pylab.plot(intensities)
+#plot psychometric function on the right.
+pylab.subplot(122)
+smoothInt = log(100,10) - smoothInt #QUEST assumes psychometric function ascending, so had to take 100-intensity
+pylab.plot(smoothInt, smoothResp, 'k-') #fitted curve
+pylab.plot([thresh, thresh],[0,threshVal],'k--') #vertical dashed line
+pylab.plot([0, thresh],[threshVal,threshVal],'k--') #horizontal dashed line
+pylab.title('threshold (%.2f) = %0.2f' %(threshVal, thresh)) #print thresh pn top of plot
+
+
+#Use pandas to calculate proportion correct at each level
+df= DataFrame({'intensity': intensities, 'response': responses})
+grouped = df.groupby('intensity')
+grouped= grouped.mean() #a groupBy object, kind of like a DataFrame but without column names, only an index?
+print('df mean at each intensity\n',  grouped )
+intens = list(grouped.index)
+pCorrect = list(grouped['response'])  #x.iloc[:]
+print('intens=',intens)
+print('pCorrect=',pCorrect)
+
+intens = log(100,10) - np.array(intens) #QUEST assumes psychometric function ascending, so had to take 100-intensity
+#data point sizes. One entry in array for each datapoint
+pointSizes = pylab.array(len(intensities))*5 #5 pixels per trial at each point
+points = pylab.scatter(intens, pCorrect, s=pointSizes, 
+    edgecolors=(0,0,0), facecolor=(1,1,1), linewidths=1,
+    zorder=10, #make sure the points plot on top of the line
+    )
+
 #
-#plot curve
-#pylab.subplot(122)
-#pylab.plot(smoothInt, smoothResp, 'k-')
-#pylab.plot([thresh, thresh],[0,threshVal],'k--') #vertical dashed line
-#pylab.plot([0, thresh],[threshVal,threshVal],'k--') #horizontal dashed line
-#pylab.title('threshold (%.2f) = %0.3f' %(threshVal, thresh))
-#
-#plot points
-#pointSizes = pylab.array(combinedN)*5 #5 pixels per trial at each point
-#points = pylab.scatter(combinedInten, combinedResp, s=pointSizes, 
-#    edgecolors=(0,0,0), facecolor=(1,1,1), linewidths=1,
-#    zorder=10, #make sure the points plot on top of the line
-#    )
-#
-#pylab.ylim([0,1])
-#pylab.xlim([0,None])
+pylab.ylim([-0.01,1.01])
+pylab.xlim([0,None])
+pylab.xlabel("log percentNoise")
+pylab.ylabel("proportion correct")
 #save a vector-graphics format for future
 #outputFile = os.path.join(dataFolder, 'last.pdf')
 #pylab.savefig(outputFile)
 #print 'saved figure to:', outputFile
-#pylab.show()
+pylab.show()

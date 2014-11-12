@@ -1,6 +1,6 @@
 Attentional Blink implemented with psychopy
 ============================
-Licensing: MIT license, like CC-BY for code which means do whatever you want with it, with an attribution to the author. If you want permission to use it without attribution, contact me.
+Licensing: MIT license, like CC-BY for code which means do whatever you want with it, with an attribution to the author.
 
 Jan 2012 started implementing attentional blink task. Started git repository on 5 November 2014 with non-git AB_addNoise_QUEST2.py
 
@@ -10,7 +10,7 @@ Main version **AB.py** includes optional noise staircase, finding noise level to
 
 Used in collaborations with Cellini, Mednick, McDevitt, & Goodbourn on sleep. Also Agosta, Battelli, & Goodbourn on left parietal lobe patients.
 
-##Empirical background:
+##Empirical background
 Martini AB data were the averages of 20 undergrads. Each contributed 4 consecutive blocks of 100 trials, total time about 35 minutes. The parameters were identical to Vul 2008, 
 with a duticycle of 90ms (~11 Hz) and each character shown for 3 frames (33 ms at 90 Hz framerate). Note that in those conditions the bottom of AB at lags 2 and 3 is effectively at chance, so there may be a floor effect there.
 
