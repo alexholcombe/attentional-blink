@@ -6,8 +6,8 @@ import psychopy.info
 import numpy as np
 from math import atan, log, ceil
 from copy import deepcopy
-import time, sys, os
-from noiseStaircaseHelpers import printStaircase, createNoise
+import time, sys, os, pylab
+from noiseStaircaseHelpers import printStaircase, createNoise, plotDataAndPsychometricCurve
 
 tasks=['T1','T1T2']; task = tasks[1]
 refreshRate=60 #90 Hz used by Paolo  #set to the framerate of the monitor
@@ -15,7 +15,7 @@ refreshRate=60 #90 Hz used by Paolo  #set to the framerate of the monitor
 #same screen or external screen? Set scrn=0 if one screen. scrn=1 means display stimulus on second screen.
 #Hz wrong, widthPix, heightPix
 quitFinder = False #if checkRefreshEtc, quitFinder becomes True
-autopilot=False
+autopilot=True
 demo=False #False
 exportImages= False #quits after one trial
 subject='Hubert' #user is prompted to enter true subject name
@@ -37,7 +37,7 @@ staircaseTrials = 4
 prefaceStaircaseTrialsN = 10
 prefaceStaircaseNoise = np.array([2, 2, 5, 5, 10, 80, 80, 80]) #will be recycled / not all used, as needed
 #,30, 80, 40, 90, 30, 70, 30, 40, 80, 20, 20, 50 ]
-
+threshCriterion = 0.9
 bgColor = [-.7,-.7,-.7] # [-1,-1,-1]
 cueColor = [1.,1.,1.]
 letterColor = [1.,1.,1.]
@@ -63,7 +63,7 @@ widthPix= 1024 #1280 #monitor width in pixels
 heightPix= 768  #800 #800 #monitor height in pixels
 monitorwidth = 38.7 #monitor width in cm
 scrn=0 #0 to use main screen, 1 to use external screen connected to computer
-fullscr=True #True to use fullscreen, False to not. Timing probably won't be quite right if fullscreen = False
+fullscr=False #True to use fullscreen, False to not. Timing probably won't be quite right if fullscreen = False
 allowGUI = False
 if demo: monitorwidth = 23#18.0
 if exportImages:
@@ -102,8 +102,10 @@ waitBlank = False
 mon = monitors.Monitor(monitorname,width=monitorwidth, distance=viewdist)#relying on  monitorwidth cm (39 for Mitsubishi to do deg calculations) and gamma info in calibratn
 mon.setSizePix( (widthPix,heightPix) )
 units='deg' #'cm'
-myWin = visual.Window(monitor=mon,size=(widthPix,heightPix),allowGUI=allowGUI,units=units,color=bgColor,colorSpace='rgb',fullscr=fullscr,screen=scrn,waitBlanking=waitBlank) #Holcombe lab monitor
-
+def openMyStimWindow(): #make it a function because have to do it several times, want to be sure is identical each time
+    myWin = visual.Window(monitor=mon,size=(widthPix,heightPix),allowGUI=allowGUI,units=units,color=bgColor,colorSpace='rgb',fullscr=fullscr,screen=scrn,waitBlanking=waitBlank) #Holcombe lab monitor
+    return myWin
+myWin = openMyStimWindow()
 refreshMsg2 = ''
 if not checkRefreshEtc:
     refreshMsg1 = 'REFRESH RATE WAS NOT CHECKED'
@@ -210,10 +212,9 @@ else:
    logging.flush()
    core.quit()
 if not demo: 
-    myWin.allowGUI = False
+    allowGUI = False
 
-myWin = visual.Window(monitor=mon,size=(widthPix,heightPix),allowGUI=allowGUI,units=units,color=bgColor,colorSpace='rgb',fullscr=fullscr,screen=scrn,waitBlanking=waitBlank) #Holcombe lab monitor
-
+myWin = openMyStimWindow()
 #set up output data file, log file,  copy of program code, and logging
 fileName = dataDir+'/'+subject+'_'+timeAndDateStr
 if not demo and not exportImages:
@@ -585,7 +586,6 @@ def play_high_tone_correct_low_incorrect(correct, passThisTrial=False):
     else: #incorrect
         low.play()
 
-
 expStop=False; framesSaved=0
 if doStaircase:
     #create the staircase handler
@@ -596,7 +596,7 @@ if doStaircase:
                               stopInterval= 1, #sd of posterior has to be this small or smaller for staircase to stop, unless nTrials reached
                               nTrials = staircaseTrials,
                               #extraInfo = thisInfo,
-                              pThreshold = 0.90, #0.25,    
+                              pThreshold = threshCriterion, #0.25,    
                               gamma = 1./26,
                               delta=0.02, #lapse rate, I suppose for Weibull function fit
                               method = 'quantile', #uses the median of the posterior as the final answer
@@ -680,13 +680,23 @@ if doStaircase:
     threshNoise = max( 0, threshNoise ) #If get them all wrong, posterior peaks at a very negative number
     msg= 'Staircase estimate of threshold = ' + str(threshNoise) + ' with sd=' + str(round(staircase.sd(),2))
     logging.info(msg); print(msg)
+    
+    #myWin.close() #This screws things up because stuff like letters were already drawn and seem to require original window
+    fit = data.FitWeibull(staircase.intensities, staircase.data, expectedMin=1/26., sems = 1.0/len(staircase.intensities))
+    plotDataAndPsychometricCurve(staircase.intensities, staircase.data,fit, threshCriterion)
+    #save figure to file
+    pylab.savefig(fileName+'.pdf')
+    #if not fullscr:
+    #    pylab.show() #must call this to actually show plot
+    #else:
+    #    pass #show at end of experiment
     #END if doStaircase
 mainStaircaseGoing = False
 if doStaircase:
     noisePercent = threshNoise
 else: #didn't staircase, instead using defaultNoiseLevel
     noisePercent = defaultNoiseLevel
-    
+myWin= openMyStimWindow();    myWin.flip(); myWin.flip();myWin.flip();myWin.flip()
 nDoneAfterStaircase =0
 while nDoneAfterStaircase < trials.nTotal and expStop==False:
     if nDoneAfterStaircase==0:
@@ -749,3 +759,6 @@ if nDoneAfterStaircase >0:
 #contents = dataFile.getvalue(); print contents
 #contents = logF.getvalue(); print contents
 logging.flush(); dataFile.close()
+myWin.close() #have to close window to show plot
+if True: #fullscr:
+    pylab.show()

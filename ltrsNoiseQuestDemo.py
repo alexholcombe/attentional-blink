@@ -8,10 +8,9 @@ so I use percentNoise (0->100) instead of proportion
 from __future__ import print_function
 from psychopy import core, visual, event, misc, data
 import numpy as np
+import os, pylab
 from math import atan, log
-from noiseStaircaseHelpers import printStaircase, createNoise
-import pylab
-from pandas import Series, DataFrame
+from noiseStaircaseHelpers import printStaircase, createNoise, plotDataAndPsychometricCurve
 
 def numberToLetter(number): #0 = A, 25 = Z
     #if it's not really a letter, return @
@@ -201,55 +200,11 @@ responses= np.array([0,0,0,0,0 ,     0,1,0,0,     1,1,0,    1,1,1,        1,1,1]
 #
 expectedMin = 1.0/26
 #fit curve
-threshVal = 0.9 #threshVal is proportion correct for which want to estimate the parameter (intenity) level
+threshVal = 0.9 #threshVal is proportion correct for which want to estimate the parameter (intensity) level
 fit = data.FitWeibull(intensities, responses, expectedMin=expectedMin,   sems = 1.0/len(intensities))
-#generate psychometric curve
-smoothInt = pylab.arange(min(intensities), max(intensities), 0.001)
-smoothResp = fit.eval(smoothInt)
-thresh = fit.inverse(threshVal)
-thresh = log(100,10) - thresh #QUEST assumes psychometric function ascending, so had to take 100-intensity
-
-#plot staircase in left hand panel
-pylab.subplot(121)
-pylab.plot(intensities)
-pylab.xlabel("staircase trial")
-pylab.ylabel("log percentNoise")
-#plot psychometric function on the right.
-ax1 = pylab.subplot(122)
-smoothInt = log(100,10) - smoothInt #QUEST assumes psychometric function ascending, so had to take 100-intensity
-pylab.plot(smoothInt, smoothResp, 'k-') #fitted curve
-pylab.plot([thresh, thresh],[0,threshVal],'k--') #vertical dashed line
-pylab.plot([0, thresh],[threshVal,threshVal],'k--') #horizontal dashed line
-figure_title = 'threshold (%.2f) = %0.2f' %(threshVal, thresh)
-#pylab.title(figure_title) #print thresh proportion top of plot
-pylab.text(0, 1.09, figure_title,
-         horizontalalignment='center', fontsize=15)
-
-#Use pandas to calculate proportion correct at each level
-df= DataFrame({'intensity': intensities, 'response': responses})
-grouped = df.groupby('intensity')
-grouped= grouped.mean() #a groupBy object, kind of like a DataFrame but without column names, only an index?
-print('df mean at each intensity\n',  grouped )
-intens = list(grouped.index)
-pCorrect = list(grouped['response'])  #x.iloc[:]
-print('intens=',intens)
-print('pCorrect=',pCorrect)
-
-intens = log(100,10) - np.array(intens) #QUEST assumes psychometric function ascending, so had to take 100-intensity
-#data point sizes. One entry in array for each datapoint
-pointSizes = pylab.array(len(intensities))*5 #5 pixels per trial at each point
-points = pylab.scatter(intens, pCorrect, s=pointSizes, 
-    edgecolors=(0,0,0), facecolor=(1,1,1), linewidths=1,
-    zorder=10, #make sure the points plot on top of the line
-    )
-pylab.ylim([-0.01,1.01])
-pylab.xlim([0,2])
-pylab.xlabel("log percentNoise")
-pylab.ylabel("proportion correct")
-#save a vector-graphics format for future
-#outputFile = os.path.join(dataFolder, 'last.pdf')
-#pylab.savefig(outputFile)
-#create second x-axis to show linear percentNoise instead of log
-ax2 = ax1.twiny()
-ax2.set(xlabel='percentNoise', xlim=[0, 100])
-pylab.show()
+plotDataAndPsychometricCurve(intensities,responses,fit,threshVal)
+#save figure to file
+dataDir = 'data'
+outputFile = os.path.join(dataDir, 'test.pdf')
+pylab.savefig(outputFile)
+pylab.show() #must call this to actually show plot
