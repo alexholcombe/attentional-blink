@@ -209,17 +209,21 @@ smoothResp = fit.eval(smoothInt)
 thresh = fit.inverse(threshVal)
 thresh = log(100,10) - thresh #QUEST assumes psychometric function ascending, so had to take 100-intensity
 
-#plot each staircase in left hand panel
+#plot staircase in left hand panel
 pylab.subplot(121)
 pylab.plot(intensities)
+pylab.xlabel("staircase trial")
+pylab.ylabel("log percentNoise")
 #plot psychometric function on the right.
-pylab.subplot(122)
+ax1 = pylab.subplot(122)
 smoothInt = log(100,10) - smoothInt #QUEST assumes psychometric function ascending, so had to take 100-intensity
 pylab.plot(smoothInt, smoothResp, 'k-') #fitted curve
 pylab.plot([thresh, thresh],[0,threshVal],'k--') #vertical dashed line
 pylab.plot([0, thresh],[threshVal,threshVal],'k--') #horizontal dashed line
-pylab.title('threshold (%.2f) = %0.2f' %(threshVal, thresh)) #print thresh pn top of plot
-
+figure_title = 'threshold (%.2f) = %0.2f' %(threshVal, thresh)
+#pylab.title(figure_title) #print thresh proportion top of plot
+pylab.text(0, 1.09, figure_title,
+         horizontalalignment='center', fontsize=15)
 
 #Use pandas to calculate proportion correct at each level
 df= DataFrame({'intensity': intensities, 'response': responses})
@@ -238,14 +242,14 @@ points = pylab.scatter(intens, pCorrect, s=pointSizes,
     edgecolors=(0,0,0), facecolor=(1,1,1), linewidths=1,
     zorder=10, #make sure the points plot on top of the line
     )
-
-#
 pylab.ylim([-0.01,1.01])
-pylab.xlim([0,None])
+pylab.xlim([0,2])
 pylab.xlabel("log percentNoise")
 pylab.ylabel("proportion correct")
 #save a vector-graphics format for future
 #outputFile = os.path.join(dataFolder, 'last.pdf')
 #pylab.savefig(outputFile)
-#print 'saved figure to:', outputFile
+#create second x-axis to show linear percentNoise instead of log
+ax2 = ax1.twiny()
+ax2.set(xlabel='percentNoise', xlim=[0, 100])
 pylab.show()
