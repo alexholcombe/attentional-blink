@@ -1,5 +1,7 @@
 #Alex Holcombe alex.holcombe@sydney.edu.au
 #See the README.md for more information: https://github.com/alexholcombe/attentional-blink/blob/master/README.md
+#git remote add origin https://github.com/alexholcombe/attentional-blink.git
+
 from __future__ import print_function
 from psychopy import monitors, visual, event, data, logging, core, sound, gui
 import psychopy.info
@@ -696,7 +698,30 @@ if doStaircase:
     noisePercent = threshNoise
 else: #didn't staircase, instead using defaultNoiseLevel
     noisePercent = defaultNoiseLevel
-myWin= openMyStimWindow();    myWin.flip(); myWin.flip();myWin.flip();myWin.flip()
+
+NextText = visual.TextStim(myWin,pos=(0, 0),colorSpace='rgb',color = (1,1,1),alignHoriz='center', alignVert='center', units='norm',autoLog=autoLogging)
+NextRemindText = visual.TextStim(myWin,pos=(.3, -.4),colorSpace='rgb',color = (1,1,1),alignHoriz='center', alignVert='center', units='norm',autoLog=autoLogging)
+NextRemindCountText = visual.TextStim(myWin,pos=(-.1, -.4),colorSpace='rgb',color= (1,1,1),alignHoriz='center', alignVert='center', units='norm',autoLog=autoLogging)
+if doStaircase:
+    NextText.setText('Starting main (non-staircase) part of experiment')
+    NextText.draw()
+    NextRemindText.setText(' % have done...')
+
+    
+if nDone%(    max(trials.nTotal/4,1) ) ==0:  #have to enforce at least 1, otherwise will modulus by 0 when #trials is less than 4
+    NextRemindCountText.setText(round((double(nDone)/double(trials.nTotal)*100),2))
+    NextRemindText.setText(' % have done...')
+    NextRemindCountText.draw()
+    NextRemindText.draw()
+myWin.flip(clearBuffer=True) 
+while nextTrial:
+   if autopilot: break
+   elif expStop == True:break
+   for key in event.getKeys():       #check if pressed abort-type key
+         if key in ['space']:nextTrial=False
+myWin.clearBuffer()
+        
+#myWin= openMyStimWindow();    myWin.flip(); myWin.flip();myWin.flip();myWin.flip()
 nDoneAfterStaircase =0
 while nDoneAfterStaircase < trials.nTotal and expStop==False:
     if nDoneAfterStaircase==0:
