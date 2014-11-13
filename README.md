@@ -32,9 +32,11 @@ To reduce the T1 performance of a subject (elderly control in our case), we add 
 ![staircase plot](https://github.com/alexholcombe/attentional-blink/blob/master/test_staircase_plot.jpg "staircase plot")
 The threshold printed at the top of the plot (and printed at the end of the .log file) can then be used for the main experiment. 
 
+Because the participant may be confused about the task at first, you ought to give her some practice trials first by running this and pressing ESCAPE when you think she has had enough, and ignoring the results until you run it again.
+
 ####Main AB experiment
 
-Simply run AB.py and choose "main" experiment. If you want noise on the letters, change the percent noise from the default value of 0. Data in long format is in the <subject details>.txt file. A copy of the code as it was when executed is in the <subject details>.py file. Diagnostics are in the .log file.
+Run AB.py and choose "main" experiment. If you want noise on the letters (for example the value suggested by the staircase), change the percent noise from the default value of 0. Data in long format is in the <subject details>.txt file. A copy of the code as it was when executed is in the <subject details>.py file. Diagnostics are in the .log file.
 
 Summary of results are printed in output window.
 

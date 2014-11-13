@@ -33,8 +33,8 @@ autoLogging=False
 if demo:
     refreshRate = 60.;  #100
 
-staircaseTrials = 15
-prefaceStaircaseTrialsN = 20
+staircaseTrials = 25
+prefaceStaircaseTrialsN = 22
 prefaceStaircaseNoise = np.array([5,20,20,20, 50,50,50,5,80,80,80,5,95,95,95]) #will be recycled / not all used, as needed
 threshCriterion = 0.58
 bgColor = [-.7,-.7,-.7] # [-1,-1,-1]

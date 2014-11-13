@@ -12,6 +12,8 @@ import os, pylab
 from math import atan, log
 from noiseStaircaseHelpers import printStaircase, createNoise, plotDataAndPsychometricCurve
 
+threshCriterion = 0.9 #threshCriterion is proportion correct for which want to estimate the parameter (intensity) level
+
 def numberToLetter(number): #0 = A, 25 = Z
     #if it's not really a letter, return @
     #if type(number) != type(5) and type(number) != type(np.array([3])[0]): #not an integer or numpy.int32
@@ -65,23 +67,12 @@ stepSizesLog = [log(1.4,10),log(1.4,10),log(1.3,10),log(1.3,10),log(1.2,10)]
 #create the staircase handler
 useQuest = True
 if  useQuest:
-    chrisFajouQuestWorks = data.QuestHandler(startVal = 0.95, startValSd = 0.75,
-                          stopInterval=0.3,
-                          nTrials=10,
-                          #extraInfo = thisInfo,
-                          pThreshold = 0.25,    
-                          gamma = 1./26,
-                          delta=0.02, #lapse rate, I suppose for Weibull function fit
-                          method = 'mean',
-                          stepType = 'lin',  #will home in on the 80% threshold. But stepType = 'log' doesn't usually work
-                          minVal=0.01, maxVal = 1.0
-                          )
     staircase = data.QuestHandler(startVal = 95, 
                           startValSd = 100,
                           stopInterval= 1,
                           nTrials=50,
                           #extraInfo = thisInfo,
-                          pThreshold = 0.25,    
+                          pThreshold = threshCriterion,    
                           gamma = 1./26,
                           delta=0.02, #lapse rate, I suppose for Weibull function fit
                           method = 'quantile', #uses the median of the posterior as the final answer
@@ -113,8 +104,7 @@ print('starting staircase with following settings:')
 printStaircase(staircase, briefTrialUpdate=True, add=2, mult=-1, alsoLog=False)
 
 doingStaircasePhase = False #First phase of experiment is method of constant stimuli. If use naked QUEST, might converge too soon
-initialNonstaircaseTrials = np.array([2, 5, 10, 80]) # np.array([2, 2, 5, 5, 10, 80, 80, 80])#,30, 80, 40, 90, 30, 70, 30, 40, 80, 20, 20, 50 ]
-
+initialNonstaircaseTrials = np.array([5,20,20,20, 50,50,50,5,80,80,80,5,95,95,95])
 corrEachTrial = list() #only needed for initialNonstaircaseTrials
 overallTrialN = -1
 while (not staircase.finished) and expStop==False: #staircase.thisTrialN < staircase.nTrials
@@ -193,19 +183,18 @@ print('. Proportion noise=','{:.4f}'.format(100-staircase.quantile()))
 
 intensities = staircase.intensities
 responses = staircase.data
+plotFakeDataInstead = False
+if plotFakeDataInstead: #plot standard fake data instead.
+    intensities = np.array([.7,.7,.7,.7,.7,.8,.8,.8,.8,.9,.9,.9,1.0,1.0,1.0, 1.5,1.5, 1.8,1.8,1.8,1.8,  2.0,2.0,2.0]) #debug, example data
+    responses= np.array([0,0,0,0,0 ,     0,0,0,0,     1,0,0,    0,1,1,   1,1, 1,1,1,1,     1,1,1]) #debug, example data
 
-#plot standard fake data instead.
-intensities = np.array([.7,.7,.7,.7,.7,.8,.8,.8,.8,.9,.9,.9,1.0,1.0,1.0, 1.5,1.5, 1.8,1.8,1.8,1.8,  2.0,2.0,2.0]) #debug, example data
-responses= np.array([0,0,0,0,0 ,     0,0,0,0,     1,0,0,    0,1,1,   1,1, 1,1,1,1,     1,1,1]) #debug, example data
-#
 expectedMin = 1.0/26
 #fit curve
-threshVal = 0.9 #threshVal is proportion correct for which want to estimate the parameter (intensity) level
 fit = data.FitWeibull(intensities, responses, expectedMin=expectedMin,   sems = 1.0/len(intensities))
-plotDataAndPsychometricCurve(intensities,responses,fit,threshVal)
+plotDataAndPsychometricCurve(intensities,responses,fit,threshCriterion)
 #save figure to file
-dataDir = 'data'
-outputFile = os.path.join(dataDir, 'test_staircase_plot')
+#dataDir = 'data'
+outputFile =  'test_staircase_plot' # os.path.join(dataDir, 'test_staircase_plot')
 pylab.savefig(outputFile + '.pdf')
 pylab.savefig(outputFile + '.jpg')
 pylab.show() #must call this to actually show plot
