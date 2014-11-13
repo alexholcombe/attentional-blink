@@ -36,7 +36,7 @@ if demo:
 
 staircaseTrials = 4
 prefaceStaircaseTrialsN = 10
-prefaceStaircaseNoise = np.array([5,5, 20,20,20, 50,50,50, 80,80,80]) #will be recycled / not all used, as needed
+prefaceStaircaseNoise = np.array([5,5,5,20,20,20, 50,50,50, 80,80,80,95,95,95]) #will be recycled / not all used, as needed
 threshCriterion = 0.58
 bgColor = [-.7,-.7,-.7] # [-1,-1,-1]
 cueColor = [1.,1.,1.]
@@ -694,7 +694,10 @@ if doStaircase:
     logging.info(msg); print(msg)
     myWin.close()
     #Fit and plot data
-    fit = data.FitWeibull(staircase.intensities, staircase.data, expectedMin=1/26., sems = 1.0/len(staircase.intensities))
+    try:
+        fit = data.FitWeibull(staircase.intensities, staircase.data, expectedMin=1/26., sems = 1.0/len(staircase.intensities))
+    except:
+        print("Fit failed.")
     plotDataAndPsychometricCurve(staircase.intensities, staircase.data,fit, threshCriterion)
     #save figure to file
     pylab.savefig(fileName+'.pdf')
