@@ -5,6 +5,7 @@ from math import log
 from copy import deepcopy
 from pandas import DataFrame
 import pylab, os
+from matplotlib.ticker import ScalarFormatter
 
 def printStaircase(staircase, briefTrialUpdate, add, mult, alsoLog=False):
     #if briefTrialUpdate, don't print everything, just the kind of stuff you like to know after each trial
@@ -151,7 +152,13 @@ def plotDataAndPsychometricCurve(intensities,responses,fit,threshVal):
     #pylab.savefig(outputFile)
     #create second x-axis to show linear percentNoise instead of log
     ax2 = ax1.twiny()
-    ax2.set(xlabel='percentNoise', xlim=[0, 102])
+    #ax2.set(xlabel='percentNoise', xlim=[0, 102])
+    ax2.set(xlabel='percentNoise', xlim=[2, 102]) #not quite right but if go to 0, end up with -infinity? and have error
+    #ax2 seems to be the wrong object. Why am I using pylab anyway? Matplotlib documentation seems more clear
+    #http://stackoverflow.com/questions/21920233/matplotlib-log-scale-tick-label-number-formatting
+    #ax2.axis.set_major_formatter(ScalarFormatter()) #Show linear labels, not scientific notation
+    ax2.set_xscale('log')
+    ax2.tick_params(axis='x',which='minor',bottom='off')
 #    #save figure to file
 #    outputFile = os.path.join(dataDir, 'test.pdf')
 #    pylab.savefig(outputFile)
