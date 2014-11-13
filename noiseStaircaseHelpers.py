@@ -154,6 +154,7 @@ def plotDataAndPsychometricCurve(intensities,responses,fit,threshVal):
     ax2 = ax1.twiny()
     ax2.set(xlabel='%noise', xlim=[2, 102]) #not quite right but if go to 0, end up with -infinity? and have error
     #ax2 seems to be the wrong object. Why am I using pylab anyway? Matplotlib documentation seems more clear
+    #for programming it is recommended that the namespaces be kept separate, http://matplotlib.org/api/pyplot_api.html
     #http://stackoverflow.com/questions/21920233/matplotlib-log-scale-tick-label-number-formatting
     #ax2.axis.set_major_formatter(ScalarFormatter()) #Show linear labels, not scientific notation
     ax2.set_xscale('log')

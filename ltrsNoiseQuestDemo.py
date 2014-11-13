@@ -205,6 +205,7 @@ fit = data.FitWeibull(intensities, responses, expectedMin=expectedMin,   sems = 
 plotDataAndPsychometricCurve(intensities,responses,fit,threshVal)
 #save figure to file
 dataDir = 'data'
-outputFile = os.path.join(dataDir, 'test_staircase_plot.pdf')
-pylab.savefig(outputFile)
+outputFile = os.path.join(dataDir, 'test_staircase_plot')
+pylab.savefig(outputFile + '.pdf')
+pylab.savefig(outputFile + '.jpg')
 pylab.show() #must call this to actually show plot
