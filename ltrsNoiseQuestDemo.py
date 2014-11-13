@@ -110,7 +110,7 @@ t=lastFPSupdate=0
 expStop= False
 nEasyStarterTrials = 0
 print('starting staircase with following settings:')
-printStaircase(staircase,False)
+printStaircase(staircase, briefTrialUpdate=True, add=2, mult=-1, alsoLog=False)
 
 doingStaircasePhase = False #First phase of experiment is method of constant stimuli. If use naked QUEST, might converge too soon
 initialNonstaircaseTrials = np.array([2, 5, 10, 80]) # np.array([2, 2, 5, 5, 10, 80, 80, 80])#,30, 80, 40, 90, 30, 70, 30, 40, 80, 20, 20, 50 ]
@@ -179,7 +179,7 @@ while (not staircase.finished) and expStop==False: #staircase.thisTrialN < stair
                 # an intensity value here indicates that you did not use the recommended intensity in your last trial and the staircase will replace its recorded value with the one you supplied here.
 myWin.close()
 print('Finished.')
-printStaircase(staircase,True)
+printStaircase(staircase, briefTrialUpdate=True, add=2, mult=-1, alsoLog=False)
 
 if staircase.finished:
     print('Staircase was finished')
@@ -195,8 +195,8 @@ print('. Proportion noise=','{:.4f}'.format(100-staircase.quantile()))
 intensities = staircase.intensities
 responses = staircase.data
 
-intensities = np.array([.7,.7,.7,.7,.7,.8,.8,.8,.8,.9,.9,.9,1.0,1.0,1.0,2.0,2.0,2.0]) #debug, example data
-responses= np.array([0,0,0,0,0 ,     0,1,0,0,     1,1,0,    1,1,1,        1,1,1]) #debug, example data
+intensities = np.array([.7,.7,.7,.7,.7,.8,.8,.8,.8,.9,.9,.9,1.0,1.0,1.0,1.5,2.0,2.0,2.0]) #debug, example data
+responses= np.array([0,0,0,0,0 ,     0,1,0,0,     1,1,0,    1,1,1,   1,     1,1,1]) #debug, example data
 #
 expectedMin = 1.0/26
 #fit curve
