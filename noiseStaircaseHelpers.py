@@ -115,7 +115,7 @@ def plotDataAndPsychometricCurve(intensities,responses,fit,threshVal):
     ax1 = pylab.subplot(122)
     smoothInt = log(100,10) - smoothInt #QUEST assumes psychometric function ascending, so had to take 100-intensity
     pylab.plot(smoothInt, smoothResp, 'k-') #fitted curve
-    pylab.plot([thresh, thresh],[0,threshVal],'k--') #vertical dashed line
+    pylab.plot([thresh, thresh],[0,1],'k--') #vertical dashed line
     pylab.plot([0, thresh],[threshVal,threshVal],'k--') #horizontal dashed line
     figure_title = 'threshold (%.2f) = %0.2f' %(threshVal, thresh)
     #pylab.title(figure_title) #print thresh proportion top of plot
@@ -125,16 +125,17 @@ def plotDataAndPsychometricCurve(intensities,responses,fit,threshVal):
     #Use pandas to calculate proportion correct at each level
     df= DataFrame({'intensity': intensities, 'response': responses})
     grouped = df.groupby('intensity')
-    grouped= grouped.mean() #a groupBy object, kind of like a DataFrame but without column names, only an index?
+    groupMeans= grouped.mean() #a groupBy object, kind of like a DataFrame but without column names, only an index?
     #print('df mean at each intensity\n',  grouped )
-    intens = list(grouped.index)
-    pCorrect = list(grouped['response'])  #x.iloc[:]
-    
+    intens = list(groupMeans.index)
+    pCorrect = list(groupMeans['response'])  #x.iloc[:]
     intens = log(100,10) - np.array(intens) #QUEST assumes psychometric function ascending, so had to take 100-intensity
     #data point sizes. One entry in array for each datapoint
-    pointSizes = pylab.array(len(intensities))*5 #5 pixels per trial at each point
+    ns = grouped.sum() #want n per trial to scale data point size
+    ns = list(n['response'])
+    pointSizes = np.array(ns) / max(ns) * 6 #the more trials, the bigger the datapoint size for maximum of 6
     points = pylab.scatter(intens, pCorrect, s=pointSizes, 
-        edgecolors=(0,0,0), facecolor=(1,1,1), linewidths=1,
+        edgecolors=(0,0,0), facecolors= 'none', linewidths=1,
         zorder=10, #make sure the points plot on top of the line
         )
     pylab.ylim([-0.01,1.01])

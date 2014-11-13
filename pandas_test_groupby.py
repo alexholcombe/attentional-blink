@@ -16,9 +16,11 @@ responses= np.array([0,0,0,0,0 ,     0,1,0,0,     1,1,0,    1,1,1,        1,1,1]
 df= DataFrame({'intensity': intensities, 'response': responses})
 grouped = df.groupby('intensity')
 print('mean at each intensity')
-grouped = grouped.mean()
-print( grouped )
-y=list(grouped['response'])
-print('list(grouped)=',y)
+groupedMeans = grouped.mean()
+print( groupedMeans )
+y=list(groupedMeans['response'])
+print('list(groupedMeans)=',y)
+
+
 
 

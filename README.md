@@ -1,4 +1,4 @@
-Attentional Blink implemented with psychopy
+Attentional Blink implemented with [Psychopy](https://github.com/psychopy/psychopy)
 ============================
 Licensing: MIT license, like CC-BY for code which means do whatever you want with it, with an attribution to the author.
 
@@ -10,7 +10,7 @@ Main version **AB.py** includes optional noise staircase, finding noise level to
 
 Used in collaborations with Cellini, Mednick, McDevitt, & Goodbourn on sleep. Also Agosta, Battelli, & Goodbourn on left parietal lobe patients.
 
-##Empirical background
+###Empirical background
 Martini AB data were the averages of 20 undergrads. Each contributed 4 consecutive blocks of 100 trials, total time about 35 minutes. The parameters were identical to Vul 2008, 
 with a duticycle of 90ms (~11 Hz) and each character shown for 3 frames (33 ms at 90 Hz framerate). Note that in those conditions the bottom of AB at lags 2 and 3 is effectively at chance, so there may be a floor effect there.
 
@@ -22,6 +22,6 @@ For published analyses of serial position errors, also see
 * Martini (2012) Attention Perception & Psychophysics "SOURCES OF BIAS AND UNCERTAINTY IN A VISUAL TEMPORAL INDIVIDUATION TASK"
 * Goodbourn & Holcombe (2014 in press).  Journal of Experimental Psychology: Human Perception & Performance
 
-###Staircase piloting notes
+####Staircase piloting notes
 Alex with glasses off, targeted 90% correct with staircase.
 Started with 20 trials of noise= [ 2  2  5  5 10 80 80 80  2  2  5  5 10 80 80 80] then a max 20-trial staircase followed by 25 trials at that noise level. Yielded 85% approx correct for T1.
