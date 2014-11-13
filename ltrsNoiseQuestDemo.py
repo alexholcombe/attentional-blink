@@ -195,8 +195,8 @@ print('. Proportion noise=','{:.4f}'.format(100-staircase.quantile()))
 intensities = staircase.intensities
 responses = staircase.data
 
-intensities = np.array([.7,.7,.7,.7,.7,.8,.8,.8,.8,.9,.9,.9,1.0,1.0,1.0,1.5,2.0,2.0,2.0]) #debug, example data
-responses= np.array([0,0,0,0,0 ,     0,1,0,0,     1,1,0,    1,1,1,   1,     1,1,1]) #debug, example data
+intensities = np.array([.7,.7,.7,.7,.7,.8,.8,.8,.8,.9,.9,.9,1.0,1.0,1.0, 1.5,1.5, 1.8,1.8,1.8,1.8,  2.0,2.0,2.0]) #debug, example data
+responses= np.array([0,0,0,0,0 ,     0,0,0,0,     1,0,0,    0,1,1,   1,1, 1,1,1,1,     1,1,1]) #debug, example data
 #
 expectedMin = 1.0/26
 #fit curve

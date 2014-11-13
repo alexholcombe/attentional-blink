@@ -136,7 +136,8 @@ def plotDataAndPsychometricCurve(intensities,responses,fit,threshVal):
     ns = grouped.sum() #want n per trial to scale data point size
     ns = list(ns['response'])
     
-    pointSizes = 2+ 6 * np.array(ns) / max(ns) #the more trials, the bigger the datapoint size for maximum of 6
+    pointSizes = 5+ 40 * np.array(ns) / max(ns) #the more trials, the bigger the datapoint size for maximum of 6
+    print('pointSizes = ',pointSizes)
     points = pylab.scatter(intens, pCorrect, s=pointSizes, 
         edgecolors=(0,0,0), facecolors= 'none', linewidths=1,
         zorder=10, #make sure the points plot on top of the line
