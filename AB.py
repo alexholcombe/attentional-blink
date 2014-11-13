@@ -36,9 +36,8 @@ if demo:
 
 staircaseTrials = 4
 prefaceStaircaseTrialsN = 10
-prefaceStaircaseNoise = np.array([2, 2, 5, 5, 10, 80, 80, 80]) #will be recycled / not all used, as needed
-#,30, 80, 40, 90, 30, 70, 30, 40, 80, 20, 20, 50 ]
-threshCriterion = 0.9
+prefaceStaircaseNoise = np.array([5,5, 20,20,20, 50,50,50, 80,80,80]) #will be recycled / not all used, as needed
+threshCriterion = 0.58
 bgColor = [-.7,-.7,-.7] # [-1,-1,-1]
 cueColor = [1.,1.,1.]
 letterColor = [1.,1.,1.]
@@ -88,7 +87,7 @@ OK = gui.DlgFromDict(dictionary=infoFirst,
     tip={'Check refresh etc': 'To confirm refresh rate and that can keep up, at least when drawing a grating'},
     #fixed=['Check refresh etc'])#this attribute can't be changed by the user
     )
-if not OK:
+if not OK: #this line doesn't seem to work
     print('User cancelled from dialog box'); core.quit()
 doStaircase = infoFirst['Staircase percent noise dots']
 checkRefreshEtc = infoFirst['Check refresh etc']
@@ -153,10 +152,13 @@ else: #checkRefreshEtc
 myWin.close() #have to close window to show dialog box
 #core.wait(.5); #debugON
 #STOP
-defaultNoiseLevel = 0.0 #to use if no staircase, set by user
+defaultNoiseLevel = 0.0 #to use if no staircase, can be set by user
 trialsPerCondition = 1 #8 #default value
 dlgLabelsOrdered = list()
-myDlg = gui.Dlg(title="RSVP experiment", pos=(200,400))
+if doStaircase:
+    myDlg = gui.Dlg(title="Staircase to find appropriate noisePercent", pos=(200,400))
+else: 
+    myDlg = gui.Dlg(title="RSVP experiment", pos=(200,400))
 if not autopilot:
     myDlg.addField('Subject name (default="Hubert"):', tip='or subject code')
     dlgLabelsOrdered.append('subject')
@@ -195,10 +197,6 @@ if myDlg.OK: #unpack information from dialogue box
        name=thisInfo[dlgLabelsOrdered.index('subject')]
        if len(name) > 0: #if entered something
          subject = name #change subject default name to what user entered
-   if len(thisInfo[dlgLabelsOrdered.index('trialsPerCondition')]) > 0: #if entered something for trialsPerCondition
-       trialsPerCondition = int( thisInfo[ dlgLabelsOrdered.index('trialsPerCondition') ] ) #convert string to integer
-       print('trialsPerCondition entered by user=',trialsPerCondition)
-       logging.info('trialsPerCondition entered by user=',trialsPerCondition)
    if doStaircase:
        if len(thisInfo[dlgLabelsOrdered.index('staircaseTrials')]) >0:
            staircaseTrials = int( thisInfo[ dlgLabelsOrdered.index('staircaseTrials') ] ) #convert string to integer
@@ -208,8 +206,13 @@ if myDlg.OK: #unpack information from dialogue box
            prefaceStaircaseTrialsN = int( thisInfo[ dlgLabelsOrdered.index('easyTrials') ] ) #convert string to integer
            print('prefaceStaircaseTrialsN entered by user=',thisInfo[dlgLabelsOrdered.index('easyTrials')])
            logging.info('prefaceStaircaseTrialsN entered by user=',prefaceStaircaseTrialsN)
-   else:
-        defaultNoiseLevel = int (thisInfo[ dlgLabelsOrdered.index('defaultNoiseLevel') ])
+   else: #not doing staircase
+       if len(thisInfo[dlgLabelsOrdered.index('trialsPerCondition')]) > 0: #if entered something for trialsPerCondition
+           trialsPerCondition = int( thisInfo[ dlgLabelsOrdered.index('trialsPerCondition') ] ) #convert string to integer
+           print('trialsPerCondition entered by user=',trialsPerCondition)
+           logging.info('trialsPerCondition entered by user=',trialsPerCondition)
+       if len(thisInfo[dlgLabelsOrdered.index('defaultNoiseLevel')]) > 0: #if entered something for trialsPerCondition
+           defaultNoiseLevel = int (thisInfo[ dlgLabelsOrdered.index('defaultNoiseLevel') ])
 else: 
    print('User cancelled from dialog box.')
    logging.flush()
@@ -273,8 +276,8 @@ fixationBlank= visual.PatchStim(myWin, tex= -1*fixatnNoiseTexture, size=(fixSize
 fixationPoint= visual.PatchStim(myWin,tex='none',colorSpace='rgb',color=(1,1,1),size=10,units='pix',autoLog=autoLogging)
 respPromptText = visual.TextStim(myWin,pos=(0, -.9),colorSpace='rgb',color=(1,1,1),alignHoriz='center', alignVert='center',height=.1,units='norm',autoLog=autoLogging)
 respText = visual.TextStim(myWin,pos=(0,0),colorSpace='rgb',color=(1,1,0),alignHoriz='center', alignVert='center',height=.16,units='norm',autoLog=autoLogging)
-nextText = visual.TextStim(myWin,pos=(0, 0),colorSpace='rgb',color = (1,1,1),alignHoriz='center', alignVert='center', units='norm',autoLog=autoLogging)
-NextRemindCountText = visual.TextStim(myWin,pos=(-.1, -.4),colorSpace='rgb',color= (1,1,1),alignHoriz='center', alignVert='center', units='norm',autoLog=autoLogging)
+nextText = visual.TextStim(myWin,pos=(0, .1),colorSpace='rgb',color = (1,1,1),alignHoriz='center', alignVert='center',height=.1,units='norm',autoLog=autoLogging)
+NextRemindCountText = visual.TextStim(myWin,pos=(0,.2),colorSpace='rgb',color= (1,1,1),alignHoriz='center', alignVert='center',height=.1,units='norm',autoLog=autoLogging)
 screenshot= False; screenshotDone = False
 stimList = []
 
@@ -483,6 +486,7 @@ numTrialsApproxCorrect = 0;
 numTrialsEachCorrect= np.zeros( numRespsWanted )
 numTrialsEachApproxCorrect= np.zeros( numRespsWanted )
 nTrialsCorrectT2eachLag = np.zeros(len(possibleCue2lags)); nTrialsEachLag = np.zeros(len(possibleCue2lags))
+nTrialsApproxCorrectT2eachLag = np.zeros(len(possibleCue2lags));
 
 def do_RSVP_stim(cue1pos, cue2lag, proportnNoise,trialN):
     #relies on global variables:
@@ -694,6 +698,7 @@ if doStaircase:
     plotDataAndPsychometricCurve(staircase.intensities, staircase.data,fit, threshCriterion)
     #save figure to file
     pylab.savefig(fileName+'.pdf')
+    print('The plot has been saved ('+fileName+')')
     pylab.show() #must call this to actually show plot
 else: #not staircase
     noisePercent = defaultNoiseLevel
@@ -729,6 +734,7 @@ else: #not staircase
             numTrialsEachApproxCorrect += eachApproxCorrect
             cue2lagIdx = list(possibleCue2lags).index(cue2lag)
             nTrialsCorrectT2eachLag[cue2lagIdx] += eachCorrect[1]
+            nTrialsApproxCorrectT2eachLag[cue2lagIdx] += eachApproxCorrect[1]
             nTrialsEachLag[cue2lagIdx] += 1
                 
             if exportImages:  #catches one frame of response
@@ -742,23 +748,24 @@ else: #not staircase
             
             dataFile.flush(); logging.flush()
             print('nDoneMain=', nDoneMain,' trials.nTotal=',trials.nTotal) #' trials.thisN=',trials.thisN
-            if (trials.nTotal > 0 and nDoneMain %
-                 ( max(trials.nTotal*pctCompletedBreak/100.,1) ) ==0):  #have to enforce at least 1, otherwise will modulus by 0 when trials is less than 4
+            if (trials.nTotal > 6 and nDoneMain > 2 and nDoneMain %
+                 ( trials.nTotal*pctCompletedBreak/100. ) ==1):  #dont modulus 0 because then will do it for last trial
                     nextText.setText('Press "SPACE" to continue!')
                     nextText.draw()
                     progressMsg = 'Completed ' + str(nDoneMain) + ' of ' + str(trials.nTotal) + ' trials'
                     NextRemindCountText.setText(progressMsg)
                     NextRemindCountText.draw()
-            myWin.flip() # myWin.flip(clearBuffer=True) 
-            waiting=True
-            while waiting:
-               if autopilot: break
-               elif expStop == True:break
-               for key in event.getKeys():       #check if pressed abort-type key
-                     if key in ['space']: 
-                        waiting=False
-            myWin.clearBuffer()
-            STOP
+                    myWin.flip() # myWin.flip(clearBuffer=True) 
+                    waiting=True
+                    while waiting:
+                       if autopilot: break
+                       elif expStop == True:break
+                       for key in event.getKeys():      #check if pressed abort-type key
+                             if key in ['space','ESCAPE']: 
+                                waiting=False
+                             if key in ['ESCAPE']:
+                                expStop = False
+                    myWin.clearBuffer()
             core.wait(.2); time.sleep(.2)
         #end main trials loop
 timeAndDateStr = time.strftime("%H:%M on %d %b %Y", time.localtime())
@@ -769,18 +776,18 @@ if expStop:
     print(msg); logging.error(msg)
 
 if not doStaircase and (nDoneMain >0):
-    print('Of ',nDoneMain,' trials, ',numTrialsCorrect*1.0/nDoneMain*100., '% all targets exactly correct',sep='')
+    print('Of ',nDoneMain,' trials, on ',numTrialsCorrect*1.0/nDoneMain*100., '% of all trials all targets reported exactly correct',sep='')
     print('All targets approximately correct in ',round(numTrialsApproxCorrect*1.0/nDoneMain*100,1),'% of trials',sep='')
     print('T1: ',round(numTrialsEachCorrect[0]*1.0/nDoneMain*100.,2), '% correct',sep='')
     if len(numTrialsEachCorrect) >1:
         print('T2: ',round(numTrialsEachCorrect[1]*1.0/nDoneMain*100,2),'% correct',sep='')
     print('T1: ',round(numTrialsEachApproxCorrect[0]*1.0/nDoneMain*100,2),'% approximately correct',sep='')
     if len(numTrialsEachCorrect) >1:
-        print('T2:',round(numTrialsEachApproxCorrect[1]*1.0/nDoneMain*100,2),'% approximately correct',sep='')
-        print('T2 for each of the lags',np.around(possibleCue2lags,0),': ', nTrialsCorrectT2eachLag / nTrialsEachLag)
+        print('T2: ',round(numTrialsEachApproxCorrect[1]*1.0/nDoneMain*100,2),'% approximately correct',sep='')
+        print('T2 for each of the lags,',np.around(possibleCue2lags,0),': ', np.around(100*nTrialsCorrectT2eachLag / nTrialsEachLag,3), '%correct, and ',
+                 np.around(100*nTrialsApproxCorrectT2eachLag/nTrialsEachLag,3),'%approximately correct')
    #print numRightWrongEachSpeedOrder[:,1] / ( numRightWrongEachSpeedOrder[:,0] + numRightWrongEachSpeedOrder[:,1])   
 
 logging.flush(); dataFile.close()
-myWin.close() #have to close window to show plot
-#ADD PLOT OF AB PERFORMANCE
-#pylab.show()
+myWin.close() #have to close window if want to show a plot
+#ADD PLOT OF AB PERFORMANCE?
