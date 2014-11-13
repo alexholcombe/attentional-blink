@@ -34,9 +34,9 @@ autoLogging=False
 if demo:
     refreshRate = 60.;  #100
 
-staircaseTrials = 4
-prefaceStaircaseTrialsN = 10
-prefaceStaircaseNoise = np.array([5,5,5,20,20,20, 50,50,50, 80,80,80,95,95,95]) #will be recycled / not all used, as needed
+staircaseTrials = 15
+prefaceStaircaseTrialsN = 20
+prefaceStaircaseNoise = np.array([5,20,20,20, 50,50,50,5,80,80,80,5,95,95,95]) #will be recycled / not all used, as needed
 threshCriterion = 0.58
 bgColor = [-.7,-.7,-.7] # [-1,-1,-1]
 cueColor = [1.,1.,1.]
@@ -80,17 +80,20 @@ pixelperdegree = widthPix/ (atan(monitorwidth/viewdist) /np.pi*180)
 print('pixelperdegree=',pixelperdegree)
 
 # create a dialog from dictionary 
-infoFirst = { 'Staircase percent noise dots': True, 'Check refresh etc':True }
+infoFirst = { 'Experiment type': ['Staircase', 'Main'], 'Check refresh etc':True, 'Fullscreen (timing errors if not)': True }
 OK = gui.DlgFromDict(dictionary=infoFirst, 
-    title='Attentional Blink, with optional staircase to find noise level to reduce T1 performance down to threshold', 
-    order=['Staircase percent noise dots', 'Check refresh etc'], 
+    title='AB experiment OR staircase to find thresh noise level for T1 performance criterion', 
+    order=['Experiment type', 'Check refresh etc', 'Fullscreen (timing errors if not)'], 
     tip={'Check refresh etc': 'To confirm refresh rate and that can keep up, at least when drawing a grating'},
     #fixed=['Check refresh etc'])#this attribute can't be changed by the user
     )
 if not OK: #this line doesn't seem to work
     print('User cancelled from dialog box'); core.quit()
-doStaircase = infoFirst['Staircase percent noise dots']
+if infoFirst['Experiment type'] == 'Staircase':
+    doStaircase = True
+else: doStaircase = False
 checkRefreshEtc = infoFirst['Check refresh etc']
+fullscr = infoFirst['fullscreen (timing errors if not)']
 if checkRefreshEtc:
     quitFinder = True # False #debugON 
 if quitFinder:

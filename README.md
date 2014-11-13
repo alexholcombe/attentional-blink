@@ -25,3 +25,10 @@ For published analyses of serial position errors, also see
 ####Staircase piloting notes
 Alex with glasses off, targeted 90% correct with staircase.
 Started with 20 trials of noise= [ 2  2  5  5 10 80 80 80  2  2  5  5 10 80 80 80] then a max 20-trial staircase followed by 25 trials at that noise level. Yielded 85% approx correct for T1.
+
+####Instructions
+
+Our parietal patients had poor T1 performance of around 58% approximately (Vul et al.) correct. Their attentional blink curve looks different from the elderly controls ,but the lower T1 performance is a confound. 
+
+To reduce the T1 performance of a subject, we add noise to the letters. To determine the noise level needed to reduce performance to 58% correct, run AB.py and choose the staircase experiment.
+
