@@ -34,7 +34,9 @@ The threshold printed at the top of the plot (and printed at the end of the .log
 
 ####Main AB experiment
 
-Simply run AB.py and choose "main" experiment. If you want noise on the letters, increase the percent from 0. Data in long format is in the <subject details>.txt file. A copy of the code as it was when executed is in the <subject details>.py file. Diagnostics are in the .log file.
+Simply run AB.py and choose "main" experiment. If you want noise on the letters, change the percent noise from the default value of 0. Data in long format is in the <subject details>.txt file. A copy of the code as it was when executed is in the <subject details>.py file. Diagnostics are in the .log file.
+
+Summary of results are printed in output window.
 
 
 ######Staircase piloting notes

@@ -13,8 +13,7 @@ from noiseStaircaseHelpers import printStaircase, createNoise, plotDataAndPsycho
 tasks=['T1','T1T2']; task = tasks[1]
 #THINGS THAT COULD PREVENT SUCCESS ON A STRANGE MACHINE
 #same screen or external screen? Set scrn=0 if one screen. scrn=1 means display stimulus on second screen.
-#refreshRate wrong, widthPix, heightPix
-refreshRate=60 #set to the framerate of the monitor
+#widthPix, heightPix
 quitFinder = False #if checkRefreshEtc, quitFinder becomes True
 autopilot=False
 demo=False #False
@@ -42,22 +41,6 @@ bgColor = [-.7,-.7,-.7] # [-1,-1,-1]
 cueColor = [1.,1.,1.]
 letterColor = [1.,1.,1.]
 cueRadius = 6 #6 deg, as in Martini E2    Letters should have height of 2.5 deg
-#letter size 2.5 deg
-numLettersToPresent = 26
-SOAms = 133
-#Minimum SOAms should be 84  because any shorter, I can't always notice the second ring when lag1.   71 in Martini E2 and E1b (actually he used 66.6 but that's because he had a crazy refresh rate of 90 Hz)
-letterDurMs = 80 #23.6  in Martini E2 and E1b (actually he used 22.2 but that's because he had a crazy refresh rate of 90 Hz)
-
-ISIms = SOAms - letterDurMs
-letterDurFrames = int( np.floor(letterDurMs / (1000./refreshRate)) )
-cueDurFrames = letterDurFrames
-ISIframes = int( np.floor(ISIms / (1000./refreshRate)) )
-#have set ISIframes and letterDurFrames to integer that corresponds as close as possible to originally intended ms
-rateInfo = 'total SOA=' + str(round(  (ISIframes + letterDurFrames)*1000./refreshRate, 2)) + ' or ' + str(ISIframes + letterDurFrames) + ' frames, comprising\n'
-rateInfo+=  'ISIframes ='+str(ISIframes)+' or '+str(ISIframes*(1000./refreshRate))+' ms and letterDurFrames ='+str(letterDurFrames)+' or '+str(round( letterDurFrames*(1000./refreshRate), 2))+'ms'
-logging.info(rateInfo); print(rateInfo)
-
-trialDurFrames = int( numLettersToPresent*(ISIframes+letterDurFrames) ) #trial duration in frames
 
 widthPix= 1024 #1280 #monitor width in pixels
 heightPix= 768  #800 #800 #monitor height in pixels
@@ -80,7 +63,7 @@ pixelperdegree = widthPix/ (atan(monitorwidth/viewdist) /np.pi*180)
 print('pixelperdegree=',pixelperdegree)
     
 # create a dialog from dictionary 
-infoFirst = { 'Do staircase (only)': False, 'Check refresh etc':True, 'Fullscreen (timing errors if not)': True }
+infoFirst = { 'Do staircase (only)': False, 'Check refresh etc':True, 'Fullscreen (timing errors if not)': True, 'Screen refresh rate': 60 }
 OK = gui.DlgFromDict(dictionary=infoFirst, 
     title='AB experiment OR staircase to find thresh noise level for T1 performance criterion', 
     order=['Do staircase (only)', 'Check refresh etc', 'Fullscreen (timing errors if not)'], 
@@ -92,6 +75,7 @@ if not OK.OK:
 doStaircase = infoFirst['Do staircase (only)']
 checkRefreshEtc = infoFirst['Check refresh etc']
 fullscr = infoFirst['Fullscreen (timing errors if not)']
+refreshRate = infoFirst['Screen refresh rate']
 if checkRefreshEtc:
     quitFinder = True # False #debugON 
 if quitFinder:
@@ -99,6 +83,23 @@ if quitFinder:
     applescript="\'tell application \"Finder\" to quit\'"
     shellCmd = 'osascript -e '+applescript
     os.system(shellCmd)
+
+#letter size 2.5 deg
+numLettersToPresent = 26
+SOAms = 133
+#Minimum SOAms should be 84  because any shorter, I can't always notice the second ring when lag1.   71 in Martini E2 and E1b (actually he used 66.6 but that's because he had a crazy refresh rate of 90 Hz)
+letterDurMs = 80 #23.6  in Martini E2 and E1b (actually he used 22.2 but that's because he had a crazy refresh rate of 90 Hz)
+
+ISIms = SOAms - letterDurMs
+letterDurFrames = int( np.floor(letterDurMs / (1000./refreshRate)) )
+cueDurFrames = letterDurFrames
+ISIframes = int( np.floor(ISIms / (1000./refreshRate)) )
+#have set ISIframes and letterDurFrames to integer that corresponds as close as possible to originally intended ms
+rateInfo = 'total SOA=' + str(round(  (ISIframes + letterDurFrames)*1000./refreshRate, 2)) + ' or ' + str(ISIframes + letterDurFrames) + ' frames, comprising\n'
+rateInfo+=  'ISIframes ='+str(ISIframes)+' or '+str(ISIframes*(1000./refreshRate))+' ms and letterDurFrames ='+str(letterDurFrames)+' or '+str(round( letterDurFrames*(1000./refreshRate), 2))+'ms'
+logging.info(rateInfo); print(rateInfo)
+
+trialDurFrames = int( numLettersToPresent*(ISIframes+letterDurFrames) ) #trial duration in frames
 
 monitorname = 'testmonitor'
 waitBlank = False
