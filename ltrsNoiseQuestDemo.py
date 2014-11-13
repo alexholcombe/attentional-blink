@@ -191,7 +191,6 @@ else:
 print('staircase quantile (median)=','{:.4f}'.format(staircase.quantile()), end='') #gets the median. Prints as floating point with 4 digits of precision
 print('. Proportion noise=','{:.4f}'.format(100-staircase.quantile())) 
 
-
 intensities = staircase.intensities
 responses = staircase.data
 

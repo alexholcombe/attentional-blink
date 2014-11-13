@@ -22,13 +22,22 @@ For published analyses of serial position errors, also see
 * Martini (2012) Attention Perception & Psychophysics "SOURCES OF BIAS AND UNCERTAINTY IN A VISUAL TEMPORAL INDIVIDUATION TASK"
 * Goodbourn & Holcombe (2014 in press).  Journal of Experimental Psychology: Human Perception & Performance
 
-####Staircase piloting notes
-Alex with glasses off, targeted 90% correct with staircase.
-Started with 20 trials of noise= [ 2  2  5  5 10 80 80 80  2  2  5  5 10 80 80 80] then a max 20-trial staircase followed by 25 trials at that noise level. Yielded 85% approx correct for T1.
+
 
 ####Instructions
 
 **Motivation**: Our parietal patients had poor T1 performance of around 58% approximately (Vul et al.) correct. Their attentional blink curve looks different from the elderly controls, but the lower T1 performance is a confound. 
 
-To reduce the T1 performance of a subject (elderly control in our case), we add noise to the letters. To determine the noise level needed to reduce performance to 58% correct, run AB.py and choose the staircase experiment. You are then prompted to modify the staircase parameters, if you like, before the staircase is run and the results plotted at the end, like this: 
+#####Optional staircase phase
 
+To reduce the T1 performance of a subject (elderly control in our case), we add noise to the letters. To determine the noise level needed to reduce performance to 58% correct, run AB.py and choose the staircase experiment. You are then prompted to modify the staircase parameters, if you like, before the staircase is run and the results plotted at the end, like this: 
+![staircase plot](https://github.com/alexholcombe/attentional-blink/blob/master/test_staircase_plot.pdf "staircase plot")
+The threshold printed at the top of the plot (and printed at the end of the .log file) can then be used for the main experiment. 
+
+#####Main AB experiment
+
+Simply run AB.py and choose "main" experiment. If you want noise on the letters, increase the percent from 0. Data in long format is in the <subject details>.txt file. Copy of the code when executed is in the <subject details>.py file. Diagnostics are in the .log file.
+
+####Staircase piloting notes
+Alex with glasses off, targeted 90% correct with staircase.
+Started with 20 trials of noise= [ 2  2  5  5 10 80 80 80  2  2  5  5 10 80 80 80] then a max 20-trial staircase followed by 25 trials at that noise level. Yielded 85% approx correct for T1.
