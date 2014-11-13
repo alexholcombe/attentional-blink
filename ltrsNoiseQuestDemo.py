@@ -195,6 +195,7 @@ print('. Proportion noise=','{:.4f}'.format(100-staircase.quantile()))
 intensities = staircase.intensities
 responses = staircase.data
 
+#plot standard fake data instead.
 intensities = np.array([.7,.7,.7,.7,.7,.8,.8,.8,.8,.9,.9,.9,1.0,1.0,1.0, 1.5,1.5, 1.8,1.8,1.8,1.8,  2.0,2.0,2.0]) #debug, example data
 responses= np.array([0,0,0,0,0 ,     0,0,0,0,     1,0,0,    0,1,1,   1,1, 1,1,1,1,     1,1,1]) #debug, example data
 #
@@ -205,6 +206,6 @@ fit = data.FitWeibull(intensities, responses, expectedMin=expectedMin,   sems = 
 plotDataAndPsychometricCurve(intensities,responses,fit,threshVal)
 #save figure to file
 dataDir = 'data'
-outputFile = os.path.join(dataDir, 'test.pdf')
+outputFile = os.path.join(dataDir, 'test_staircase_plot.pdf')
 pylab.savefig(outputFile)
 pylab.show() #must call this to actually show plot

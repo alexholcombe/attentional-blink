@@ -123,7 +123,7 @@ def plotDataAndPsychometricCurve(intensities,responses,fit,threshVal):
         pylab.plot([0, thresh],[threshVal,threshVal],'k--') #horizontal dashed line
         figure_title = 'threshold (%.2f) = %0.2f' %(threshVal, thresh) + '%'
         #print thresh proportion top of plot
-        pylab.text(0, 1.09, figure_title, horizontalalignment='center', fontsize=15)
+        pylab.text(0, 1.11, figure_title, horizontalalignment='center', fontsize=12)
     
     #Use pandas to calculate proportion correct at each level
     df= DataFrame({'intensity': intensities, 'response': responses})
@@ -145,15 +145,14 @@ def plotDataAndPsychometricCurve(intensities,responses,fit,threshVal):
         )
     pylab.ylim([-0.01,1.01])
     pylab.xlim([0,log(102,10)])
-    pylab.xlabel("log percentNoise")
+    pylab.xlabel("log %noise")
     pylab.ylabel("proportion correct")
     #save a vector-graphics format for future
     #outputFile = os.path.join(dataFolder, 'last.pdf')
     #pylab.savefig(outputFile)
     #create second x-axis to show linear percentNoise instead of log
     ax2 = ax1.twiny()
-    #ax2.set(xlabel='percentNoise', xlim=[0, 102])
-    ax2.set(xlabel='percentNoise', xlim=[2, 102]) #not quite right but if go to 0, end up with -infinity? and have error
+    ax2.set(xlabel='%noise', xlim=[2, 102]) #not quite right but if go to 0, end up with -infinity? and have error
     #ax2 seems to be the wrong object. Why am I using pylab anyway? Matplotlib documentation seems more clear
     #http://stackoverflow.com/questions/21920233/matplotlib-log-scale-tick-label-number-formatting
     #ax2.axis.set_major_formatter(ScalarFormatter()) #Show linear labels, not scientific notation
