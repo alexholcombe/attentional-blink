@@ -93,7 +93,7 @@ if infoFirst['Experiment type'] == 'Staircase':
     doStaircase = True
 else: doStaircase = False
 checkRefreshEtc = infoFirst['Check refresh etc']
-fullscr = infoFirst['fullscreen (timing errors if not)']
+fullscr = infoFirst['Fullscreen (timing errors if not)']
 if checkRefreshEtc:
     quitFinder = True # False #debugON 
 if quitFinder:

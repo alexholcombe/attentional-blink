@@ -28,7 +28,7 @@ Started with 20 trials of noise= [ 2  2  5  5 10 80 80 80  2  2  5  5 10 80 80 8
 
 ####Instructions
 
-Our parietal patients had poor T1 performance of around 58% approximately (Vul et al.) correct. Their attentional blink curve looks different from the elderly controls ,but the lower T1 performance is a confound. 
+**Motivation**: Our parietal patients had poor T1 performance of around 58% approximately (Vul et al.) correct. Their attentional blink curve looks different from the elderly controls, but the lower T1 performance is a confound. 
 
-To reduce the T1 performance of a subject, we add noise to the letters. To determine the noise level needed to reduce performance to 58% correct, run AB.py and choose the staircase experiment.
+To reduce the T1 performance of a subject (elderly control in our case), we add noise to the letters. To determine the noise level needed to reduce performance to 58% correct, run AB.py and choose the staircase experiment. You are then prompted to modify the staircase parameters, if you like, before the staircase is run and the results plotted at the end, like this: 
 
