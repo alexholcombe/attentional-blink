@@ -78,35 +78,18 @@ if demo:
 viewdist = 57. #cm
 pixelperdegree = widthPix/ (atan(monitorwidth/viewdist) /np.pi*180)
 print('pixelperdegree=',pixelperdegree)
-
-info = {'Observer':'jwp','gender':['male','female'], 'GratingOri':45, 'ExpVersion': 1.1, 'Debug Mode': True}
-infoDlg = gui.DlgFromDict(dictionary=info, title='TestExperiment', 
-    order=['ExpVersion', 'Observer'], 
-    tip={'Observer': 'trained visual observer, initials'},
-    fixed=['ExpVersion'])#this attribute can't be changed by the user
-    
-    
-if infoDlg.OK:
-    print(info)
-else: 
-    print('User Cancelled')
     
 # create a dialog from dictionary 
-infoFirst = { 'Experiment type': ['Staircase', 'Main'], 'Check refresh etc':True, 'Fullscreen (timing errors if not)': True }
+infoFirst = { 'Do staircase (only)': False, 'Check refresh etc':True, 'Fullscreen (timing errors if not)': True }
 OK = gui.DlgFromDict(dictionary=infoFirst, 
     title='AB experiment OR staircase to find thresh noise level for T1 performance criterion', 
-    order=['Check refresh etc', 'Fullscreen (timing errors if not)','Experiment type'], 
+    order=['Do staircase (only)', 'Check refresh etc', 'Fullscreen (timing errors if not)'], 
     tip={'Check refresh etc': 'To confirm refresh rate and that can keep up, at least when drawing a grating'},
     #fixed=['Check refresh etc'])#this attribute can't be changed by the user
     )
 if not OK.OK:
     print('User cancelled from dialog box'); core.quit()
-if infoFirst['Experiment type'] == 'Staircase':
-    doStaircase = True
-else: doStaircase = False
-print('doStaircase=',doStaircase)
-print('infoFirst=',infoFirst)
-STOP
+doStaircase = infoFirst['Do staircase (only)']
 checkRefreshEtc = infoFirst['Check refresh etc']
 fullscr = infoFirst['Fullscreen (timing errors if not)']
 if checkRefreshEtc:
@@ -229,8 +212,7 @@ if myDlg.OK: #unpack information from dialogue box
            trialsPerCondition = int( thisInfo[ dlgLabelsOrdered.index('trialsPerCondition') ] ) #convert string to integer
            print('trialsPerCondition entered by user=',trialsPerCondition)
            logging.info('trialsPerCondition entered by user=',trialsPerCondition)
-       if len(thisInfo[dlgLabelsOrdered.index('defaultNoiseLevel')]) > 0: #if entered something for trialsPerCondition
-           defaultNoiseLevel = int (thisInfo[ dlgLabelsOrdered.index('defaultNoiseLevel') ])
+       defaultNoiseLevel = int (thisInfo[ dlgLabelsOrdered.index('defaultNoiseLevel') ])
 else: 
    print('User cancelled from dialog box.')
    logging.flush()
