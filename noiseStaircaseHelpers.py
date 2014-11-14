@@ -7,7 +7,31 @@ from pandas import DataFrame
 import pylab, os
 from matplotlib.ticker import ScalarFormatter
 
-def printStaircase(staircase, briefTrialUpdate, add, mult, alsoLog=False):
+descendingPsycho = True
+def toStaircase(x):
+    #Don't need to take log, staircase internals will do that
+    if descendingPsycho:
+        y = 100 - x #100 because assuming maximum value is 100. E.g. percentNoise is 0 to 100
+    else:
+        y = x
+    return y
+    
+def outOfStaircase(y):
+        #-(10**i)-100
+#add=2 mult=-1
+    #To get inside staircase, it was (100-x)
+    #and inside log was taken. So y = log(100-x)
+    #So to get x out, it's
+    #10**y = 100 - x
+    #-x = 10**y - 100
+    # x = 100 - 10**y 
+    if descendingPsycho:
+        x = 100-10**y
+    else:
+        x = 10**y
+    return x
+    
+def printStaircase(staircase, briefTrialUpdate, add=0, mult=1, alsoLog=False):
     #if briefTrialUpdate, don't print everything, just the kind of stuff you like to know after each trial
     #needs logging as a global variable, otherwise will fail when alsoLog=True
     #add is what to add to intensities,
@@ -15,13 +39,13 @@ def printStaircase(staircase, briefTrialUpdate, add, mult, alsoLog=False):
     msg = 'staircase.data (incorrect/correct)=' + str(staircase.data)
     print(msg)
     if alsoLog:     logging.info(msg)
-    
+
     if staircase.stepType == 'log':
         msg = '\tstaircase.intensities (these are log intensities)=['
         for i in range( len(staircase.intensities) ):
             msg += '{:.2f} '.format(add + mult*staircase.intensities[i])
             #print('{:.2f} '.format(staircase.intensities[i]), end='') #I cant figure out a simpler way to prevent scientific notation
-        msg+= '], exponentiated=['
+        msg+= '], exponentiated and backTransformed=['
         for j in range( len(staircase.intensities) ):
             msg += '{:.2f} '.format(10**(add + mult*staircase.intensities[j]))
         msg+= ']'
@@ -132,10 +156,11 @@ def plotDataAndPsychometricCurve(intensities,responses,fit,threshVal):
     groupMeans= grouped.mean() #a groupBy object, kind of like a DataFrame but without column names, only an index?
     intens = list(groupMeans.index)
     pCorrect = list(groupMeans['response'])  #x.iloc[:]
-    #print('df mean at each intensity\n'); print( intens, pCorrect )
-    #data point sizes. One entry in array for each datapoint
     ns = grouped.sum() #want n per trial to scale data point size
     ns = list(ns['response'])
+    print('df mean at each intensity\n'); print(  DataFrame({'intensity': intens, 'pCorr': pCorrect, 'n': ns })   )
+    #data point sizes. One entry in array for each datapoint
+
     
     pointSizes = 5+ 40 * np.array(ns) / max(ns) #the more trials, the bigger the datapoint size for maximum of 6
     print('pointSizes = ',pointSizes)
@@ -162,3 +187,32 @@ def plotDataAndPsychometricCurve(intensities,responses,fit,threshVal):
 #    #save figure to file
 #    outputFile = os.path.join(dataDir, 'test.pdf')
 #    pylab.savefig(outputFile)
+
+
+
+
+#Test staircase functions
+threshCriterion = 0.25
+staircaseTrials = 5
+staircase = data.QuestHandler(startVal = 95, 
+                      startValSd = 80,
+                      stopInterval= 1, #sd of posterior has to be this small or smaller for staircase to stop, unless nTrials reached
+                      nTrials = staircaseTrials,
+                      #extraInfo = thisInfo,
+                      pThreshold = threshCriterion, #0.25,    
+                      gamma = 1./26,
+                      delta=0.02, #lapse rate, I suppose for Weibull function fit
+                      method = 'quantile', #uses the median of the posterior as the final answer
+                      stepType = 'log',  #will home in on the 80% threshold. But stepType = 'log' doesn't usually work
+                      minVal=1, maxVal = 100
+                      )
+print('created QUEST staircase')
+        
+prefaceStaircaseNoise = np.array([5,95]) #will be recycled / not all used, as needed
+corrEachTrial = list([1,0])
+print('Importing responses ',np.array(corrEachTrial),' and intensities ',prefaceStaircaseNoise)
+#Act of importing will cause staircase to log transform
+#staircase internal will be i = log(100-x)
+#-(10**i)-100
+staircase.importData( toStaircase(prefaceStaircaseNoise), np.array(corrEachTrial) )
+printStaircase(staircase, briefTrialUpdate=False, add=0, mult=1, alsoLog=False)

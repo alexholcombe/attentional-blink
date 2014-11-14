@@ -34,7 +34,7 @@ if demo:
     refreshRate = 60.;  #100
 
 staircaseTrials = 25
-prefaceStaircaseTrialsN = 22
+prefaceStaircaseTrialsN = 4 #22
 prefaceStaircaseNoise = np.array([5,20,20,20, 50,50,50,5,80,80,80,5,95,95,95]) #will be recycled / not all used, as needed
 threshCriterion = 0.58
 bgColor = [-.7,-.7,-.7] # [-1,-1,-1]
@@ -653,7 +653,9 @@ if doStaircase:
             if staircaseTrialN+1 == len(prefaceStaircaseNoise): #add these non-staircase trials so QUEST knows about them
                 mainStaircaseGoing = True
                 print('Importing ',corrEachTrial,' and intensities ',prefaceStaircaseNoise)
-                staircase.importData(100-prefaceStaircaseNoise, np.array(corrEachTrial)) 
+                staircase.importData(100-prefaceStaircaseNoise, np.array(corrEachTrial))
+                printStaircase(staircase, briefTrialUpdate=False, add=2, mult=-1, alsoLog=False)
+                STOP #DEBUGON
             try: #advance the staircase
                 printStaircase(staircase, briefTrialUpdate=True, add=2, mult=-1, alsoLog=False)
                 noisePercent = 100. - staircase.next()  #will step through the staircase, based on whether told it (addResponse) got it right or wrong
@@ -695,7 +697,8 @@ if doStaircase:
         staircase.importData(100-prefaceStaircaseNoise[0:staircaseTrialN], np.array(corrEachTrial)) 
 
     timeAndDateStr = time.strftime("%H:%M on %d %b %Y", time.localtime())
-    msg= ('ABORTED' if expStop else 'Finished') + ' staircase part of experiment at ' + timeAndDateStr
+    msg = ('prefaceStaircase phase' if expStop else '')
+    msg += ('ABORTED' if expStop else 'Finished') + ' staircase part of experiment at ' + timeAndDateStr
     logging.info(msg); print(msg)
     printStaircase(staircase, briefTrialUpdate=False, add=2, mult=-1, alsoLog=True)
     print('staircase.quantile=',round(staircase.quantile(),2),' sd=',round(staircase.sd(),2))
@@ -705,6 +708,7 @@ if doStaircase:
     logging.info(msg); print(msg)
     myWin.close()
     #Fit and plot data
+    fit = None
     try:
         fit = data.FitWeibull(staircase.intensities, staircase.data, expectedMin=1/26., sems = 1.0/len(staircase.intensities))
     except:
