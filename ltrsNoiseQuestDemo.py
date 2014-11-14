@@ -113,7 +113,7 @@ while (not staircase.finished) and expStop==False: #staircase.thisTrialN < stair
         percentNoise = initialNonstaircaseTrials[overallTrialN]
     else:
         if overallTrialN+1 == len(initialNonstaircaseTrials): #add these non-staircase trials so QUEST knows about them
-            print('Readying to import ',corrEachTrial,' and intensities ',initialNonstaircaseTrials)
+            print('Importing ',corrEachTrial,' and intensities ',initialNonstaircaseTrials)
             staircase.importData(100-initialNonstaircaseTrials, np.array(corrEachTrial)) 
         try: #advance the staircase
             percentNoise = 100- staircase.next()  #will step through the staircase, based on whether told it (addData) got it right or wrong
@@ -168,6 +168,10 @@ while (not staircase.finished) and expStop==False: #staircase.thisTrialN < stair
                     print('Have added an intensity of','{:.3f}'.format(100-percentNoise))
                 # an intensity value here indicates that you did not use the recommended intensity in your last trial and the staircase will replace its recorded value with the one you supplied here.
 myWin.close()
+if overallTrialN+1 < len(initialNonstaircaseTrials) and (overallTrialN>=0): #exp stopped before got through staircase preface trials
+    #add these non-staircase trials so QUEST knows about them
+    print('Importing ',corrEachTrial,' and intensities ',initialNonstaircaseTrials)
+    staircase.importData(100-initialNonstaircaseTrials[0:overallTrialN+1], np.array(corrEachTrial)) 
 print('Finished.')
 printStaircase(staircase, briefTrialUpdate=True, add=2, mult=-1, alsoLog=False)
 
@@ -190,7 +194,11 @@ if plotFakeDataInstead: #plot standard fake data instead.
 
 expectedMin = 1.0/26
 #fit curve
-fit = data.FitWeibull(intensities, responses, expectedMin=expectedMin,   sems = 1.0/len(intensities))
+fit = None
+try:
+    fit = data.FitWeibull(intensities, responses, expectedMin=expectedMin,   sems = 1.0/len(intensities))
+except:
+    print("Fit failed.")
 plotDataAndPsychometricCurve(intensities,responses,fit,threshCriterion)
 #save figure to file
 #dataDir = 'data'

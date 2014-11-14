@@ -102,16 +102,17 @@ def createNoise(proportnNoise,win,fieldWidthPix,noiseColor):
     return (noise,allFieldCoords,numDots) #Can just use noise, but if want to generate new noise of same coherence level quickly, can just shuffle coords
 
 def plotDataAndPsychometricCurve(intensities,responses,fit,threshVal):
-    #generate psychometric curve
-    smoothInt = pylab.arange(min(intensities), max(intensities), 0.001)
-    smoothResp = fit.eval(smoothInt)
     if fit is not None:
+        #generate psychometric curve
+        smoothInt = pylab.arange(min(intensities), max(intensities), 0.001)
+        smoothResp = fit.eval(smoothInt)
         thresh = fit.inverse(threshVal)
         logThresh = log(100,10) - thresh #QUEST assumes psychometric function ascending, so had to take 100-intensity
         thresh = 10**logThresh
     #plot staircase in left hand panel
     pylab.subplot(121)
-    pylab.plot(intensities)
+    intensBackTransformed = log(100,10) - np.array(intensities)
+    pylab.plot(intensBackTransformed)
     pylab.xlabel("staircase trial")
     pylab.ylabel("log percentNoise")
     #plot psychometric function on the right.
@@ -126,13 +127,12 @@ def plotDataAndPsychometricCurve(intensities,responses,fit,threshVal):
         pylab.text(0, 1.11, figure_title, horizontalalignment='center', fontsize=12)
     
     #Use pandas to calculate proportion correct at each level
-    df= DataFrame({'intensity': intensities, 'response': responses})
+    df= DataFrame({'intensity': intensBackTransformed, 'response': responses})
     grouped = df.groupby('intensity')
     groupMeans= grouped.mean() #a groupBy object, kind of like a DataFrame but without column names, only an index?
-    #print('df mean at each intensity\n',  grouped )
+    print('df mean at each intensity\n',  grouped )
     intens = list(groupMeans.index)
     pCorrect = list(groupMeans['response'])  #x.iloc[:]
-    intens = log(100,10) - np.array(intens) #QUEST assumes psychometric function ascending, so had to take 100-intensity
     #data point sizes. One entry in array for each datapoint
     ns = grouped.sum() #want n per trial to scale data point size
     ns = list(ns['response'])
