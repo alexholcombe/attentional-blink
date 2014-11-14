@@ -11,9 +11,9 @@ descendingPsycho = True
 def toStaircase(x):
     #Don't need to take log, staircase internals will do that
     if descendingPsycho:
-        y = 100 - x #100 because assuming maximum value is 100. E.g. percentNoise is 0 to 100
+        y = 100 - np.array(x) #100 because assuming maximum value is 100. E.g. percentNoise is 0 to 100
     else:
-        y = x
+        y = np.array(x)
     return y
     
 def outOfStaircase(y):
@@ -26,9 +26,9 @@ def outOfStaircase(y):
     #-x = 10**y - 100
     # x = 100 - 10**y 
     if descendingPsycho:
-        x = 100-10**y
+        x = 100-10**np.array(y)
     else:
-        x = 10**y
+        x = 10**np.array(y)
     return x
     
 def printStaircase(staircase, briefTrialUpdate, add=0, mult=1, alsoLog=False):
@@ -47,7 +47,7 @@ def printStaircase(staircase, briefTrialUpdate, add=0, mult=1, alsoLog=False):
             #print('{:.2f} '.format(staircase.intensities[i]), end='') #I cant figure out a simpler way to prevent scientific notation
         msg+= '], exponentiated and backTransformed=['
         for j in range( len(staircase.intensities) ):
-            msg += '{:.2f} '.format(10**(add + mult*staircase.intensities[j]))
+            msg += '{:.2f} '.format( outOfStaircase(staircase.intensities[j]) )
         msg+= ']'
         print(msg)
         if alsoLog:     logging.info(msg)
