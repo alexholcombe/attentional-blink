@@ -196,7 +196,7 @@ expectedMin = 1.0/26
 #fit curve
 fit = None
 try:
-    fit = data.FitWeibull(intensities, responses, expectedMin=expectedMin,   sems = 1.0/len(intensities))
+    fit = data.FitWeibull(intensities, responses, expectedMin=expectedMin,  sems = 1.0/len(intensities))
 except:
     print("Fit failed.")
 plotDataAndPsychometricCurve(intensities,responses,fit,threshCriterion)

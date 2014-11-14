@@ -120,7 +120,7 @@ def plotDataAndPsychometricCurve(intensities,responses,fit,threshVal):
     if fit is not None:
         smoothInt = log(100,10) - smoothInt #QUEST assumes psychometric function ascending, so had to take 100-intensity
         pylab.plot(smoothInt, smoothResp, 'k-') #fitted curve
-        pylab.plot([thresh, thresh],[0,1],'k--') #vertical dashed line
+        pylab.plot([thresh, thresh],[0,threshVal],'k--') #vertical dashed line
         pylab.plot([0, thresh],[threshVal,threshVal],'k--') #horizontal dashed line
         figure_title = 'threshold (%.2f) = %0.2f' %(threshVal, thresh) + '%'
         #print thresh proportion top of plot
@@ -130,9 +130,9 @@ def plotDataAndPsychometricCurve(intensities,responses,fit,threshVal):
     df= DataFrame({'intensity': intensBackTransformed, 'response': responses})
     grouped = df.groupby('intensity')
     groupMeans= grouped.mean() #a groupBy object, kind of like a DataFrame but without column names, only an index?
-    print('df mean at each intensity\n',  grouped )
     intens = list(groupMeans.index)
     pCorrect = list(groupMeans['response'])  #x.iloc[:]
+    #print('df mean at each intensity\n'); print( intens, pCorrect )
     #data point sizes. One entry in array for each datapoint
     ns = grouped.sum() #want n per trial to scale data point size
     ns = list(ns['response'])

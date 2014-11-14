@@ -15,7 +15,7 @@ tasks=['T1','T1T2']; task = tasks[1]
 #same screen or external screen? Set scrn=0 if one screen. scrn=1 means display stimulus on second screen.
 #widthPix, heightPix
 quitFinder = False #if checkRefreshEtc, quitFinder becomes True
-autopilot=False
+autopilot=True
 demo=False #False
 exportImages= False #quits after one trial
 subject='Hubert' #user is prompted to enter true subject name
@@ -402,7 +402,12 @@ def collectResponses(task,numRespsWanted,responseDebug=False):
                   if key in ['A', 'C', 'B', 'E', 'D', 'G', 'F', 'I', 'H', 'K', 'J', 'M', 'L', 'O', 'N', 'Q', 'P', 'S', 'R', 'U', 'T', 'W', 'V', 'Y', 'X', 'Z']:
                       noResponseYet = False
            if autopilot:
-               noResponseYet=False
+               noResponseYet = False
+               for key in event.getKeys():    #check if pressed abort-type key. But in autopilot so not in a loop, so have to get lucky
+                      key = key.upper()
+                      thisResponse = key
+                      if key in ['ESCAPE']:
+                            expStop = True
         #click to provide feedback that response collected. Eventually, draw on screen
         click.play()
         if thisResponse or autopilot:
@@ -647,10 +652,10 @@ if doStaircase:
         else:
             if staircaseTrialN+1 == len(prefaceStaircaseNoise): #add these non-staircase trials so QUEST knows about them
                 mainStaircaseGoing = True
-                print('Readying to import ',corrEachTrial,' and intensities ',prefaceStaircaseNoise)
+                print('Importing ',corrEachTrial,' and intensities ',prefaceStaircaseNoise)
                 staircase.importData(100-prefaceStaircaseNoise, np.array(corrEachTrial)) 
             try: #advance the staircase
-                printStaircase(staircase, briefTrialUpdate=True, alsoLog=False)
+                printStaircase(staircase, briefTrialUpdate=True, add=2, mult=-1, alsoLog=False)
                 noisePercent = 100. - staircase.next()  #will step through the staircase, based on whether told it (addResponse) got it right or wrong
                 staircaseTrialN += 1
             except StopIteration: #Need this here, even though test for finished above. I can't understand why finished test doesn't accomplish this.
@@ -684,10 +689,15 @@ if doStaircase:
                 staircase.addResponse(T1approxCorrect, intensity = 100-noisePercent) #Add a 1 or 0 to signify a correct/detected or incorrect/missed trial
                 #print('Have added an intensity of','{:.3f}'.format(100-noisePercent), 'T1approxCorrect =', T1approxCorrect, ' to staircase') #debugON
     #ENDING STAIRCASE PHASE
+
+    if staircaseTrialN+1 < len(prefaceStaircaseNoise) and (staircaseTrialN>=0): #exp stopped before got through staircase preface trials, so haven't imported yet
+        print('Importing ',corrEachTrial,' and intensities ',prefaceStaircaseNoise[0:staircaseTrialN+1])
+        staircase.importData(100-prefaceStaircaseNoise[0:staircaseTrialN], np.array(corrEachTrial)) 
+
     timeAndDateStr = time.strftime("%H:%M on %d %b %Y", time.localtime())
     msg= ('ABORTED' if expStop else 'Finished') + ' staircase part of experiment at ' + timeAndDateStr
     logging.info(msg); print(msg)
-    printStaircase(staircase, briefTrialUpdate=False, alsoLog=True)
+    printStaircase(staircase, briefTrialUpdate=False, add=2, mult=-1, alsoLog=True)
     print('staircase.quantile=',round(staircase.quantile(),2),' sd=',round(staircase.sd(),2))
     threshNoise = 100- round(staircase.quantile(),3)
     threshNoise = max( 0, threshNoise ) #If get them all wrong, posterior peaks at a very negative number
@@ -702,7 +712,7 @@ if doStaircase:
     plotDataAndPsychometricCurve(staircase.intensities, staircase.data,fit, threshCriterion)
     #save figure to file
     pylab.savefig(fileName+'.pdf')
-    print('The plot has been saved ('+fileName+')')
+    print('The plot has been saved, as '+fileName+'.pdf')
     pylab.show() #must call this to actually show plot
 else: #not staircase
     noisePercent = defaultNoiseLevel
