@@ -16,19 +16,20 @@ def toStaircase(x):
         y = np.array(x)
     return y
     
-def outOfStaircase(y):
-        #-(10**i)-100
-#add=2 mult=-1
+def outOfStaircase(y,staircase):
     #To get inside staircase, it was (100-x)
     #and inside log was taken. So y = log(100-x)
     #So to get x out, it's
     #10**y = 100 - x
     #-x = 10**y - 100
-    # x = 100 - 10**y 
-    if descendingPsycho:
-        x = 100-10**np.array(y)
-    else:
+    # x = 100 - 10**y
+    if staircase.stepType == 'log': #HOW DO I KNOW IT IS BASE 10? and why doesnt psychopy protect me from its internal log transform?
         x = 10**np.array(y)
+    else:
+        x = y
+    if descendingPsycho:
+        x = 100-x
+
     return x
     
 def printStaircase(staircase, briefTrialUpdate, add=0, mult=1, alsoLog=False):
@@ -40,12 +41,12 @@ def printStaircase(staircase, briefTrialUpdate, add=0, mult=1, alsoLog=False):
     print(msg)
     if alsoLog:     logging.info(msg)
 
-    if staircase.stepType == 'log':
-        msg = '\tstaircase.intensities (these are log intensities)=['
-        for i in range( len(staircase.intensities) ):
-            msg += '{:.2f} '.format(add + mult*staircase.intensities[i])
-            #print('{:.2f} '.format(staircase.intensities[i]), end='') #I cant figure out a simpler way to prevent scientific notation
-        msg+= '], exponentiated and backTransformed=['
+    msg = '\tstaircase.intensities [' #(these are log intensities)=['
+        if printInternalVal:
+            for i in range( len(staircase.intensities) ):
+                msg += '{:.2f} '.format( staircase.intensities[i] )) #I cant figure out a simpler way to prevent scientific notation
+        msg+= ']'
+        if staircase.log, exponentiated and backTransformed=['
         for j in range( len(staircase.intensities) ):
             msg += '{:.2f} '.format( outOfStaircase(staircase.intensities[j]) )
         msg+= ']'

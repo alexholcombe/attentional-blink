@@ -166,7 +166,6 @@ while (not staircase.finished) and expStop==False: #staircase.thisTrialN < stair
                 if overallTrialN >= len(initialNonstaircaseTrials): #doing staircase trials now
                     staircase.addResponse(thisCorr, intensity = 100-percentNoise) #Add a 1 or 0 to signify a correct/detected or incorrect/missed trial
                     print('Have added an intensity of','{:.3f}'.format(100-percentNoise))
-                # an intensity value here indicates that you did not use the recommended intensity in your last trial and the staircase will replace its recorded value with the one you supplied here.
 myWin.close()
 if overallTrialN+1 < len(initialNonstaircaseTrials) and (overallTrialN>=0): #exp stopped before got through staircase preface trials
     #add these non-staircase trials so QUEST knows about them
