@@ -7,8 +7,7 @@ from pandas import DataFrame
 import pylab, os
 from matplotlib.ticker import ScalarFormatter
 
-descendingPsycho = True
-def toStaircase(x):
+def toStaircase(x,descendingPsycho):
     #Don't need to take log, staircase internals will do that
     if descendingPsycho:
         y = 100 - np.array(x) #100 because assuming maximum value is 100. E.g. percentNoise is 0 to 100
@@ -16,7 +15,7 @@ def toStaircase(x):
         y = np.array(x)
     return y
     
-def outOfStaircase(y,staircase):
+def outOfStaircase(y,staircase,descendingPsycho):
     #To get inside staircase, it was (100-x)
     #and inside log was taken. So y = log(100-x)
     #So to get x out, it's
@@ -32,7 +31,7 @@ def outOfStaircase(y,staircase):
 
     return x
     
-def printStaircase(s, briefTrialUpdate, printInternalVal = False, alsoLog=False):
+def printStaircase(s, descendingPsycho=False, briefTrialUpdate=False, printInternalVal = False, alsoLog=False):
     #if briefTrialUpdate, don't print everything, just the kind of stuff you like to know after each trial
     #needs logging as a global variable, otherwise will fail when alsoLog=True
     #add is what to add to intensities,
@@ -50,7 +49,7 @@ def printStaircase(s, briefTrialUpdate, printInternalVal = False, alsoLog=False)
         if alsoLog:     logging.info(msg)
     msg = '\tstaircase.intensities, values [' 
     for j in range( len(s.intensities) ):
-        msg += '{:.2f}, '.format( outOfStaircase(s.intensities[j], s) )
+        msg += '{:.2f}, '.format( outOfStaircase(s.intensities[j], s, descendingPsycho) )
     msg+= ']'
     print(msg)
     if alsoLog:     logging.info(msg)
@@ -58,13 +57,13 @@ def printStaircase(s, briefTrialUpdate, printInternalVal = False, alsoLog=False)
     if type(staircase) is data.StairHandler:
         numReversals = len(s.reversalIntensities)
         msg= 'staircase number of reversals=' + str(numReversals) + '] '
-        msg+= 'reversal noiseProportions=' + str( 1- np.array( outofStaircase(s.reversalIntensities,s)) )
+        msg+= 'reversal noiseProportions=' + str( 1- np.array( outofStaircase(s.reversalIntensities,s,descendingPsycho)) )
         print(msg)
         if alsoLog:     logging.info(msg)
         if numReversals>0:
             numReversalsToAvg = numReversals-1
             msg= ('mean of final' + str(numReversalsToAvg) + 
-                      ' reversals =' + str( 1-np.average(  outofStaircase(s.reversalIntensities[-numReversalsToAvg:],s),   ) ) )
+                      ' reversals =' + str( 1-np.average(  outofStaircase(s.reversalIntensities[-numReversalsToAvg:],s,descendingPsycho),   ) ) )
             print(msg)
             if alsoLog:     logging.info(msg)
     elif type(s) is data.QuestHandler:
@@ -123,25 +122,32 @@ def createNoise(proportnNoise,win,fieldWidthPix,noiseColor):
         sizes=1)
     return (noise,allFieldCoords,numDots) #Can just use noise, but if want to generate new noise of same coherence level quickly, can just shuffle coords
 
-def plotDataAndPsychometricCurve(intensities,responses,fit,threshVal):
+def plotDataAndPsychometricCurve(staircase,fit,descendingPsycho,threshVal):
+    #Expects staircase, which has intensities and responses in it
+    #May or may not be log steps staircase internals
+    #Plotting with linear axes
+    #Fit is a psychopy data fit object. Assuming that it couldn't handle descendingPsycho so have to invert the values from it
+    intensLinear= outOfStaircase(staircase.intensities, staircase, descendingPsycho)
+    print('intensLinear=',intensLinear)
     if fit is not None:
         #generate psychometric curve
-        smoothInt = pylab.arange(min(intensities), max(intensities), 0.001)
-        smoothResp = fit.eval(smoothInt)
+        intensitiesForCurve = pylab.arange(min(intensLinear), max(intensLinear), 0.1)
         thresh = fit.inverse(threshVal)
-        logThresh = log(100,10) - thresh #QUEST assumes psychometric function ascending, so had to take 100-intensity
-        thresh = 10**logThresh
+        if descendingPsycho:
+            intensitiesForFit = 100-intensitiesForCurve
+            thresh = 100 - thresh
+        ysForCurve = fit.eval(intensitiesForFit)
+    print('intensitiesForCurve=',intensitiesForCurve)
+    print('ysForCurve=',ysForCurve) #debugON
     #plot staircase in left hand panel
     pylab.subplot(121)
-    intensBackTransformed = log(100,10) - np.array(intensities)
-    pylab.plot(intensBackTransformed)
+    pylab.plot(intensLinear)
     pylab.xlabel("staircase trial")
     pylab.ylabel("log percentNoise")
     #plot psychometric function on the right.
     ax1 = pylab.subplot(122)
     if fit is not None:
-        smoothInt = log(100,10) - smoothInt #QUEST assumes psychometric function ascending, so had to take 100-intensity
-        pylab.plot(smoothInt, smoothResp, 'k-') #fitted curve
+        pylab.plot(intensitiesForCurve, ysForCurve, 'k-') #fitted curve
         pylab.plot([thresh, thresh],[0,threshVal],'k--') #vertical dashed line
         pylab.plot([0, thresh],[threshVal,threshVal],'k--') #horizontal dashed line
         figure_title = 'threshold (%.2f) = %0.2f' %(threshVal, thresh) + '%'
@@ -149,43 +155,46 @@ def plotDataAndPsychometricCurve(intensities,responses,fit,threshVal):
         pylab.text(0, 1.11, figure_title, horizontalalignment='center', fontsize=12)
     
     #Use pandas to calculate proportion correct at each level
-    df= DataFrame({'intensity': intensBackTransformed, 'response': responses})
+    df= DataFrame({'intensity': intensLinear, 'response': staircase.data})
+    print('df=')
+    print(df) #debugON
     grouped = df.groupby('intensity')
     groupMeans= grouped.mean() #a groupBy object, kind of like a DataFrame but without column names, only an index?
-    intens = list(groupMeans.index)
+    intensitiesTested = list(groupMeans.index)
     pCorrect = list(groupMeans['response'])  #x.iloc[:]
     ns = grouped.sum() #want n per trial to scale data point size
     ns = list(ns['response'])
-    print('df mean at each intensity\n'); print(  DataFrame({'intensity': intens, 'pCorr': pCorrect, 'n': ns })   )
+    print('df mean at each intensity\n'); print(  DataFrame({'intensity': intensitiesTested, 'pCorr': pCorrect, 'n': ns })   )
     #data point sizes. One entry in array for each datapoint
 
-    
     pointSizes = 5+ 40 * np.array(ns) / max(ns) #the more trials, the bigger the datapoint size for maximum of 6
     print('pointSizes = ',pointSizes)
-    points = pylab.scatter(intens, pCorrect, s=pointSizes, 
+    points = pylab.scatter(intensitiesTested, pCorrect, s=pointSizes, 
         edgecolors=(0,0,0), facecolors= 'none', linewidths=1,
         zorder=10, #make sure the points plot on top of the line
         )
     pylab.ylim([-0.01,1.01])
-    pylab.xlim([0,log(102,10)])
-    pylab.xlabel("log %noise")
+    pylab.xlim([-2,102])
+    pylab.xlabel("%noise")
     pylab.ylabel("proportion correct")
     #save a vector-graphics format for future
     #outputFile = os.path.join(dataFolder, 'last.pdf')
     #pylab.savefig(outputFile)
-    #create second x-axis to show linear percentNoise instead of log
-    ax2 = ax1.twiny()
-    ax2.set(xlabel='%noise', xlim=[2, 102]) #not quite right but if go to 0, end up with -infinity? and have error
-    #ax2 seems to be the wrong object. Why am I using pylab anyway? Matplotlib documentation seems more clear
-    #for programming it is recommended that the namespaces be kept separate, http://matplotlib.org/api/pyplot_api.html
-    #http://stackoverflow.com/questions/21920233/matplotlib-log-scale-tick-label-number-formatting
-    #ax2.axis.set_major_formatter(ScalarFormatter()) #Show linear labels, not scientific notation
-    ax2.set_xscale('log')
-    ax2.tick_params(axis='x',which='minor',bottom='off')
+    createSecondAxis = False
+    if createSecondAxis: #presently not used, if fit to log would need this to also show linear scale
+        #create second x-axis to show linear percentNoise instead of log
+        ax2 = ax1.twiny()
+        ax2.set(xlabel='%noise', xlim=[2, 102]) #not quite right but if go to 0, end up with -infinity? and have error
+        #ax2.axis.set_major_formatter(ScalarFormatter()) #Show linear labels, not scientific notation
+        #ax2 seems to be the wrong object. Why am I using pylab anyway? Matplotlib documentation seems more clear
+        #for programming it is recommended that the namespaces be kept separate, http://matplotlib.org/api/pyplot_api.html
+        #http://stackoverflow.com/questions/21920233/matplotlib-log-scale-tick-label-number-formatting
+        ax2.set_xscale('log')
+        ax2.tick_params(axis='x',which='minor',bottom='off')
+        
 #    #save figure to file
 #    outputFile = os.path.join(dataDir, 'test.pdf')
 #    pylab.savefig(outputFile)
-
 
 
 #Test staircase functions
@@ -204,12 +213,13 @@ staircase = data.QuestHandler(startVal = 95,
                       minVal=1, maxVal = 100
                       )
 print('created QUEST staircase')
-        
+
+descendingPsycho = True
 prefaceStaircaseNoise = np.array([5,95]) #will be recycled / not all used, as needed
 corrEachTrial = list([1,0])
 print('Importing responses ',np.array(corrEachTrial),' and intensities ',prefaceStaircaseNoise)
 #Act of importing will cause staircase to log transform
 #staircase internal will be i = log(100-x)
 #-(10**i)-100
-staircase.importData( toStaircase(prefaceStaircaseNoise), np.array(corrEachTrial) )
+staircase.importData( toStaircase(prefaceStaircaseNoise,descendingPsycho), np.array(corrEachTrial) )
 printStaircase(staircase, briefTrialUpdate=False, printInternalVal=True, alsoLog=False)

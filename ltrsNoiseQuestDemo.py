@@ -11,6 +11,7 @@ import numpy as np
 import os, pylab
 from math import atan, log
 from noiseStaircaseHelpers import printStaircase, createNoise, toStaircase, outOfStaircase, plotDataAndPsychometricCurve
+descendingPsycho = True
 
 # create a dialog from dictionary
 infoFirst = { 'Plot fake data (not staircase data)': False,   'threshCriterion': 0.9 }
@@ -111,7 +112,7 @@ t=lastFPSupdate=0
 expStop= False
 nEasyStarterTrials = 0
 print('starting staircase with following settings:')
-printStaircase(staircase, briefTrialUpdate=False, printInternalVal=True,  alsoLog=False)
+printStaircase(staircase, descendingPsycho, briefTrialUpdate=False, printInternalVal=True,  alsoLog=False)
 doingStaircasePhase = False #First phase of experiment is method of constant stimuli. If use naked QUEST, might converge too soon
 initialNonstaircaseTrials = np.array([5,20,20,20, 50,50,50,5,80,80,80,5,95,95,95])
 corrEachTrial = list() #only needed for initialNonstaircaseTrials
@@ -123,7 +124,7 @@ while (not staircase.finished) and expStop==False: #staircase.thisTrialN < stair
     else:
         if overallTrialN+1 == len(initialNonstaircaseTrials): #add these non-staircase trials so QUEST knows about them
             print('Importing ',corrEachTrial,' and intensities ',initialNonstaircaseTrials)
-            staircase.importData(100-initialNonstaircaseTrials, np.array(corrEachTrial)) 
+            staircase.importData( toStaircase(initialNonstaircaseTrials,descendingPsycho), np.array(corrEachTrial)) 
         try: #advance the staircase
             percentNoise = 100- staircase.next()  #will step through the staircase, based on whether told it (addData) got it right or wrong
             overallTrialN += 1
@@ -179,9 +180,9 @@ myWin.close()
 if overallTrialN+1 < len(initialNonstaircaseTrials) and (overallTrialN>=0): #exp stopped before got through staircase preface trials
     #add these non-staircase trials so QUEST knows about them
     print('Importing ',corrEachTrial,' and intensities ',initialNonstaircaseTrials)
-    staircase.importData(100-initialNonstaircaseTrials[0:overallTrialN+1], np.array(corrEachTrial)) 
+    staircase.importData( toStaircase(initialNonstaircaseTrials[0:overallTrialN+1],descendingPsycho), np.array(corrEachTrial)) 
 print('Finished.')
-printStaircase(staircase, briefTrialUpdate=True, printInternalVal=True,  alsoLog=False)
+printStaircase(staircase, descendingPsycho, briefTrialUpdate=True, printInternalVal=True,  alsoLog=False)
 
 if staircase.finished:
     print('Staircase was finished')
@@ -193,24 +194,29 @@ else:
 print('staircase quantile (median)=','{:.4f}'.format(staircase.quantile()), end='') #gets the median. Prints as floating point with 4 digits of precision
 print('. Proportion noise=','{:.4f}'.format(100-staircase.quantile())) 
 
-intensities = outOfStaircase( staircase.intensities, staircase ) #inverse log, 100- 
-responses = staircase.data
 if plotFakeDataInstead: #plot standard fake data instead.
     intensities = np.array([5.00, 20.00, 20.00, 20.00, 50.00, 50.00, 50.00, 5.00, 80.00, 80.00, 80.00, 5.00, 95.00, 95.00, 95.00, 74.56, 75.89, 76.94, 77.72, 78.43, 79.05, 79.68, 80.28, 80.87, 81.53, 82.22, 83.05, 84.01, 85.04, 86.09, 87.02, 87.80, 88.47, 89.03, 89.49, 89.88, 90.20, 90.49, 90.74, 90.96, 91.16, 89.97, 90.12, 90.24, 90.37, 90.48, 90.59, 90.69, 90.79, 90.10, 90.18, 90.26, 90.33, 90.40, 90.47, 90.54, 90.60, 90.66, 90.72, 90.28, 90.33, 90.37, 90.42, 90.06, 89.73
     ]) #debug, example data
-    responses= np.array([1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 1, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 1, 1, 1, 1, 1, 1, 1, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 1, 1, 1, 0, 0, 1
+    corrEachTrial= np.array([1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 1, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 1, 1, 1, 1, 1, 1, 1, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 1, 1, 1, 0, 0, 1
     ]) #debug, example data
+    staircase.importData( toStaircase(intensities,descendingPsycho), corrEachTrial) 
+
+intensities = outOfStaircase( staircase.intensities, staircase, descendingPsycho ) #inverse log, 100- 
+responses = staircase.data
 
 expectedMin = 1.0/26
 #fit curve
 fit = None
-try:
-    fit = data.FitWeibull(intensities, responses, expectedMin=expectedMin,  sems = 1.0/len(intensities))
+try: #does this work with descending function??  NOO
+    intensityForCurveFitting = intensities
+    if descendingPsycho: 
+        intensityForCurveFitting = 100-intensities
+    fit = data.FitWeibull(intensityForCurveFitting, responses, expectedMin=expectedMin,  sems = 1.0/len(intensityForCurveFitting))
+    print('fit=',end=''); print(fit) #debugON
 except:
     print("Fit failed.")
-plotDataAndPsychometricCurve(intensities,responses,fit,threshCriterion)
+plotDataAndPsychometricCurve(staircase,fit,descendingPsycho,threshCriterion)
 #save figure to file
-#dataDir = 'data'
 outputFile =  'test_staircase_plot' # os.path.join(dataDir, 'test_staircase_plot')
 pylab.savefig(outputFile + '.pdf')
 pylab.savefig(outputFile + '.jpg')

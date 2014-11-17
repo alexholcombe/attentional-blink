@@ -29,7 +29,7 @@ For published analyses of serial position errors, also see
 ####Optional staircase phase
 
 To reduce the T1 performance of a subject (elderly control in our case), we add noise to the letters. To determine the noise level needed to reduce performance to 58% correct, run AB.py and choose the staircase experiment. You are then prompted to modify the staircase parameters, if you like, before the staircase is run and the results plotted at the end, like this: 
-![staircase plot](https://github.com/alexholcombe/attentional-blink/blob/master/test_staircase_plot.jpg "staircase plot")
+![staircase plot](https://github.com/alexholcombe/attentional-blink/blob/master/example_staircase_plot.jpg "staircase plot")
 The threshold printed at the top of the plot (and printed at the end of the .log file) can then be used for the main experiment. 
 
 Because the participant may be confused about the task at first, you ought to give her some practice trials first by running this and pressing ESCAPE when you think she has had enough, and ignoring the results until you run it again.
