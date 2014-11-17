@@ -14,7 +14,7 @@ def toStaircase(x,descendingPsycho):
     else:
         y = np.array(x)
     return y
-    
+
 def outOfStaircase(y,staircase,descendingPsycho):
     #To get inside staircase, it was (100-x)
     #and inside log was taken. So y = log(100-x)
@@ -22,7 +22,7 @@ def outOfStaircase(y,staircase,descendingPsycho):
     #10**y = 100 - x
     #-x = 10**y - 100
     # x = 100 - 10**y
-    if staircase.stepType == 'log': #HOW DO I KNOW IT IS BASE 10? and why doesnt psychopy protect me from its internal log transform?
+    if staircase.stepType == 'log': #HOW DO I KNOW IT IS BASE 10? and why doesnt psychopy protect me from log values. I guess actual intensities not meant for user
         x = 10**np.array(y)
     else:
         x = y
@@ -128,7 +128,6 @@ def plotDataAndPsychometricCurve(staircase,fit,descendingPsycho,threshVal):
     #Plotting with linear axes
     #Fit is a psychopy data fit object. Assuming that it couldn't handle descendingPsycho so have to invert the values from it
     intensLinear= outOfStaircase(staircase.intensities, staircase, descendingPsycho)
-    print('intensLinear=',intensLinear)
     if fit is not None:
         #generate psychometric curve
         intensitiesForCurve = pylab.arange(min(intensLinear), max(intensLinear), 0.01)

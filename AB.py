@@ -654,9 +654,9 @@ if doStaircase:
                 mainStaircaseGoing = True
                 print('Importing ',corrEachTrial,' and intensities ',prefaceStaircaseNoise)
                 staircase.importData(100-prefaceStaircaseNoise, np.array(corrEachTrial))
-                printStaircase(staircase, briefTrialUpdate=False, printInternalVal=True, alsoLog=False)
+                printStaircase(staircase, descendingPsycho, briefTrialUpdate=False, printInternalVal=True, alsoLog=False)
             try: #advance the staircase
-                printStaircase(staircase, briefTrialUpdate=True, printInternalVal=True,  alsoLog=False)
+                printStaircase(staircase, descendingPsycho, briefTrialUpdate=True, printInternalVal=True, alsoLog=False)
                 noisePercent = 100. - staircase.next()  #will step through the staircase, based on whether told it (addResponse) got it right or wrong
                 staircaseTrialN += 1
             except StopIteration: #Need this here, even though test for finished above. I can't understand why finished test doesn't accomplish this.
@@ -699,7 +699,7 @@ if doStaircase:
     msg = ('prefaceStaircase phase' if expStop else '')
     msg += ('ABORTED' if expStop else 'Finished') + ' staircase part of experiment at ' + timeAndDateStr
     logging.info(msg); print(msg)
-    printStaircase(staircase, briefTrialUpdate=True, printInternalVal=True, alsoLog=False)
+    printStaircase(staircase, descendingPsycho, briefTrialUpdate=True, printInternalVal=True, alsoLog=False)
     #print('staircase.quantile=',round(staircase.quantile(),2),' sd=',round(staircase.sd(),2))
     threshNoise = round(staircase.quantile(),3)
     if descendingPsycho:
