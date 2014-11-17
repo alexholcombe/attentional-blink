@@ -14,7 +14,7 @@ from noiseStaircaseHelpers import printStaircase, createNoise, toStaircase, outO
 descendingPsycho = True
 
 # create a dialog from dictionary
-infoFirst = { 'Plot fake data (not staircase data)': False,   'threshCriterion': 0.9 }
+infoFirst = { 'Plot fake data (not staircase data)': False,   'threshCriterion': 0.58 }
 dlgResult = gui.DlgFromDict(dictionary=infoFirst, 
     title='Staircase to find thresh noise level, example with single letter presentation', 
     order=['Plot fake data (not staircase data)', 'threshCriterion'], 
@@ -123,15 +123,16 @@ while (not staircase.finished) and expStop==False:
         percentNoise = initialNonstaircaseTrials[overallTrialN]
     else:
         if overallTrialN+1 == len(initialNonstaircaseTrials): #add these non-staircase trials so QUEST knows about them
-            print('Importing ',corrEachTrial,' and intensities ',initialNonstaircaseTrials)
+            print('Importing ',corrEachTrial,' and intensities ',repr(initialNonstaircaseTrials))
             staircase.importData( toStaircase(initialNonstaircaseTrials,descendingPsycho), np.array(corrEachTrial)) 
+            
         try: #advance the staircase
             percentNoise = staircase.next()
             if descendingPsycho: #this is freaking awkward. Staircase.next() un-logs it, but there's no wrapper for intensities that un-logs them. Psychopy should add that
                percentNoise = 100- percentNoise  #will step through the staircase, based on whether told it (addData) got it right or wrong
             overallTrialN += 1
         except StopIteration: #Need this here, even though test for finished above. I can't understand why finished test doesn't accomplish this.
-            print('stopping because staircase.next() returned a StopIteration, which it is supposed to do when it is finished')
+            print('stopping because staircase.next() returned a StopIteration, which it does when it is finished')
             break #break out of the trials loop
     print('overallTrialN=',overallTrialN, '   percentNoise for this trial = ', round(percentNoise,2)) #debugON
 
@@ -193,8 +194,10 @@ else:
 # can now access 1 of 3 suggested threshold levels
 #print('staircase mean=',staircase.mean())
 #print('staircase mode=',staircase.mode())
-print('staircase quantile (median)=','{:.4f}'.format(staircase.quantile()), end='') #gets the median. Prints as floating point with 4 digits of precision
-print('. Proportion noise=','{:.4f}'.format(100-staircase.quantile())) 
+if descendingPsycho:
+    quantilePctNoise = 100-staircase.quantile() 
+#print('staircase quantile (median)=','{:.4f}'.format(staircase.quantile()), end='') #gets the median. Prints as floating point with 4 digits of precision
+print('Median of posterior distribution according to QUEST, percent noise=','{:.4f}'.format(quantilePctNoise)) 
 
 if plotFakeDataInstead: #plot standard fake data instead.
     intensities = np.array([5.00, 20.00, 20.00, 20.00, 50.00, 50.00, 50.00, 5.00, 80.00, 80.00, 80.00, 5.00, 95.00, 95.00, 95.00, 74.56, 75.89, 76.94, 77.72, 78.43, 79.05, 79.68, 80.28, 80.87, 81.53, 82.22, 83.05, 84.01, 85.04, 86.09, 87.02, 87.80, 88.47, 89.03, 89.49, 89.88, 90.20, 90.49, 90.74, 90.96, 91.16, 89.97, 90.12, 90.24, 90.37, 90.48, 90.59, 90.69, 90.79, 90.10, 90.18, 90.26, 90.33, 90.40, 90.47, 90.54, 90.60, 90.66, 90.72, 90.28, 90.33, 90.37, 90.42, 90.06, 89.73

@@ -9,13 +9,13 @@ from math import atan, log, ceil
 from copy import deepcopy
 import time, sys, os, pylab
 from noiseStaircaseHelpers import printStaircase, toStaircase, outOfStaircase, createNoise, plotDataAndPsychometricCurve
-
+descendingPsycho = True
 tasks=['T1','T1T2']; task = tasks[1]
 #THINGS THAT COULD PREVENT SUCCESS ON A STRANGE MACHINE
 #same screen or external screen? Set scrn=0 if one screen. scrn=1 means display stimulus on second screen.
 #widthPix, heightPix
 quitFinder = False #if checkRefreshEtc, quitFinder becomes True
-autopilot=True
+autopilot=False
 demo=False #False
 exportImages= False #quits after one trial
 subject='Hubert' #user is prompted to enter true subject name
@@ -700,16 +700,16 @@ if doStaircase:
     msg += ('ABORTED' if expStop else 'Finished') + ' staircase part of experiment at ' + timeAndDateStr
     logging.info(msg); print(msg)
     printStaircase(staircase, briefTrialUpdate=True, printInternalVal=True, alsoLog=False)
-    print('staircase.quantile=',round(staircase.quantile(),2),' sd=',round(staircase.sd(),2))
-    threshNoise = 100- round(staircase.quantile(),3)
-    threshNoise = max( 0, threshNoise ) #If get them all wrong, posterior peaks at a very negative number
+    #print('staircase.quantile=',round(staircase.quantile(),2),' sd=',round(staircase.sd(),2))
+    threshNoise = round(staircase.quantile(),3)
+    if descendingPsycho:
+        threshNoise = 100- threshNoise
+    threshNoise = max( 0, threshNoise ) #e.g. ff get all trials wrong, posterior peaks at a very negative number
     msg= 'Staircase estimate of threshold = ' + str(threshNoise) + ' with sd=' + str(round(staircase.sd(),2))
     logging.info(msg); print(msg)
     myWin.close()
     #Fit and plot data
     fit = None
-try: 
-
     try:
         intensityForCurveFitting = staircase.intensities
         if descendingPsycho: 
@@ -717,7 +717,7 @@ try:
         fit = data.FitWeibull(intensityForCurveFitting, staircase.data, expectedMin=1/26., sems = 1.0/len(staircase.intensities))
     except:
         print("Fit failed.")
-    plotDataAndPsychometricCurve(staircase.intensities, staircase.data,fit, threshCriterion)
+    plotDataAndPsychometricCurve(staircase,fit,descendingPsycho,threshCriterion)
     #save figure to file
     pylab.savefig(fileName+'.pdf')
     print('The plot has been saved, as '+fileName+'.pdf')

@@ -131,14 +131,18 @@ def plotDataAndPsychometricCurve(staircase,fit,descendingPsycho,threshVal):
     print('intensLinear=',intensLinear)
     if fit is not None:
         #generate psychometric curve
-        intensitiesForCurve = pylab.arange(min(intensLinear), max(intensLinear), 0.1)
+        intensitiesForCurve = pylab.arange(min(intensLinear), max(intensLinear), 0.01)
         thresh = fit.inverse(threshVal)
         if descendingPsycho:
             intensitiesForFit = 100-intensitiesForCurve
             thresh = 100 - thresh
         ysForCurve = fit.eval(intensitiesForFit)
-    print('intensitiesForCurve=',intensitiesForCurve)
-    print('ysForCurve=',ysForCurve) #debugON
+        #print('intensitiesForCurve=',intensitiesForCurve)
+        #print('ysForCurve=',ysForCurve) #debug
+    else: #post-staircase function fitting failed, but can fall back on what staircase returned
+        thresh = staircase.quantile()
+        if descendingPsycho:
+            thresh = 100-thresh
     #plot staircase in left hand panel
     pylab.subplot(121)
     pylab.plot(intensLinear)
@@ -148,16 +152,17 @@ def plotDataAndPsychometricCurve(staircase,fit,descendingPsycho,threshVal):
     ax1 = pylab.subplot(122)
     if fit is not None:
         pylab.plot(intensitiesForCurve, ysForCurve, 'k-') #fitted curve
-        pylab.plot([thresh, thresh],[0,threshVal],'k--') #vertical dashed line
-        pylab.plot([0, thresh],[threshVal,threshVal],'k--') #horizontal dashed line
-        figure_title = 'threshold (%.2f) = %0.2f' %(threshVal, thresh) + '%'
-        #print thresh proportion top of plot
-        pylab.text(0, 1.11, figure_title, horizontalalignment='center', fontsize=12)
+    pylab.plot([thresh, thresh],[0,threshVal],'k--') #vertical dashed line
+    pylab.plot([0, thresh],[threshVal,threshVal],'k--') #horizontal dashed line
+    figure_title = 'threshold (%.2f) = %0.2f' %(threshVal, thresh) + '%'
+    #print thresh proportion top of plot
+    pylab.text(0, 1.11, figure_title, horizontalalignment='center', fontsize=12)
+    if fit is None:
+        pylab.title('Fit failed')
     
     #Use pandas to calculate proportion correct at each level
     df= DataFrame({'intensity': intensLinear, 'response': staircase.data})
-    print('df=')
-    print(df) #debugON
+    #print('df='); print(df) #debug
     grouped = df.groupby('intensity')
     groupMeans= grouped.mean() #a groupBy object, kind of like a DataFrame but without column names, only an index?
     intensitiesTested = list(groupMeans.index)
