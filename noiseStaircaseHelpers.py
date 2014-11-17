@@ -172,7 +172,7 @@ def plotDataAndPsychometricCurve(staircase,fit,descendingPsycho,threshVal):
     #data point sizes. One entry in array for each datapoint
 
     pointSizes = 5+ 40 * np.array(ns) / max(ns) #the more trials, the bigger the datapoint size for maximum of 6
-    print('pointSizes = ',pointSizes)
+    #print('pointSizes = ',pointSizes)
     points = pylab.scatter(intensitiesTested, pCorrect, s=pointSizes, 
         edgecolors=(0,0,0), facecolors= 'none', linewidths=1,
         zorder=10, #make sure the points plot on top of the line

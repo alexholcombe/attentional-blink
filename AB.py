@@ -34,7 +34,7 @@ if demo:
     refreshRate = 60.;  #100
 
 staircaseTrials = 25
-prefaceStaircaseTrialsN = 4 #22
+prefaceStaircaseTrialsN = 20 #22
 prefaceStaircaseNoise = np.array([5,20,20,20, 50,50,50,5,80,80,80,5,95,95,95]) #will be recycled / not all used, as needed
 threshCriterion = 0.58
 bgColor = [-.7,-.7,-.7] # [-1,-1,-1]
@@ -283,7 +283,7 @@ screenshot= False; screenshotDone = False
 stimList = []
 
 #SETTING THE CONDITIONS
-possibleCue1positions =  np.array([8,9])          #np.array([6,7,8,9,10]) # [4,10,16,22] used in Martini E2, group 2
+possibleCue1positions =  np.array([6,7,8,9,10]) # [4,10,16,22] used in Martini E2, group 2
 possibleCue2lags = np.array([1,2,5,8,10]) 
 for cue1pos in possibleCue1positions:
    for cue2lag in possibleCue2lags:
