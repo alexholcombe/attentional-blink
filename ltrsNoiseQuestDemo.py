@@ -6,13 +6,23 @@ I used to have the noise parameter go from 0 to 1 but with log stepping, stairca
 so I use percentNoise (0->100) instead of proportion
 """
 from __future__ import print_function
-from psychopy import core, visual, event, misc, data
+from psychopy import core, visual, event, misc, data, gui
 import numpy as np
 import os, pylab
 from math import atan, log
-from noiseStaircaseHelpers import printStaircase, createNoise, plotDataAndPsychometricCurve
+from noiseStaircaseHelpers import printStaircase, createNoise, toStaircase, outOfStaircase, plotDataAndPsychometricCurve
 
-threshCriterion = 0.9 #threshCriterion is proportion correct for which want to estimate the parameter (intensity) level
+# create a dialog from dictionary
+infoFirst = { 'Plot fake data (not staircase data)': False,   'threshCriterion': 0.9 }
+dlgResult = gui.DlgFromDict(dictionary=infoFirst, 
+    title='Staircase to find thresh noise level, example with single letter presentation', 
+    order=['Plot fake data (not staircase data)', 'threshCriterion'], 
+    #fixed=['Check refresh etc'])#this attribute can't be changed by the user
+    )
+if not dlgResult.OK:
+    print('User cancelled from dialog box'); core.quit()
+plotFakeDataInstead = infoFirst['Plot fake data (not staircase data)']
+threshCriterion = infoFirst['threshCriterion'] #threshCriterion is proportion correct for which want to estimate the parameter (intensity) level
 
 def numberToLetter(number): #0 = A, 25 = Z
     #if it's not really a letter, return @
@@ -101,8 +111,7 @@ t=lastFPSupdate=0
 expStop= False
 nEasyStarterTrials = 0
 print('starting staircase with following settings:')
-printStaircase(staircase, briefTrialUpdate=True, add=2, mult=-1, alsoLog=False)
-
+printStaircase(staircase, briefTrialUpdate=False, printInternalVal=True,  alsoLog=False)
 doingStaircasePhase = False #First phase of experiment is method of constant stimuli. If use naked QUEST, might converge too soon
 initialNonstaircaseTrials = np.array([5,20,20,20, 50,50,50,5,80,80,80,5,95,95,95])
 corrEachTrial = list() #only needed for initialNonstaircaseTrials
@@ -172,7 +181,7 @@ if overallTrialN+1 < len(initialNonstaircaseTrials) and (overallTrialN>=0): #exp
     print('Importing ',corrEachTrial,' and intensities ',initialNonstaircaseTrials)
     staircase.importData(100-initialNonstaircaseTrials[0:overallTrialN+1], np.array(corrEachTrial)) 
 print('Finished.')
-printStaircase(staircase, briefTrialUpdate=True, add=2, mult=-1, alsoLog=False)
+printStaircase(staircase, briefTrialUpdate=True, printInternalVal=True,  alsoLog=False)
 
 if staircase.finished:
     print('Staircase was finished')
@@ -184,12 +193,13 @@ else:
 print('staircase quantile (median)=','{:.4f}'.format(staircase.quantile()), end='') #gets the median. Prints as floating point with 4 digits of precision
 print('. Proportion noise=','{:.4f}'.format(100-staircase.quantile())) 
 
-intensities = staircase.intensities
+intensities = outOfStaircase( staircase.intensities, staircase ) #inverse log, 100- 
 responses = staircase.data
-plotFakeDataInstead = False
 if plotFakeDataInstead: #plot standard fake data instead.
-    intensities = np.array([.7,.7,.7,.7,.7,.8,.8,.8,.8,.9,.9,.9,1.0,1.0,1.0, 1.5,1.5, 1.8,1.8,1.8,1.8,  2.0,2.0,2.0]) #debug, example data
-    responses= np.array([0,0,0,0,0 ,     0,0,0,0,     1,0,0,    0,1,1,   1,1, 1,1,1,1,     1,1,1]) #debug, example data
+    intensities = np.array([5.00, 20.00, 20.00, 20.00, 50.00, 50.00, 50.00, 5.00, 80.00, 80.00, 80.00, 5.00, 95.00, 95.00, 95.00, 74.56, 75.89, 76.94, 77.72, 78.43, 79.05, 79.68, 80.28, 80.87, 81.53, 82.22, 83.05, 84.01, 85.04, 86.09, 87.02, 87.80, 88.47, 89.03, 89.49, 89.88, 90.20, 90.49, 90.74, 90.96, 91.16, 89.97, 90.12, 90.24, 90.37, 90.48, 90.59, 90.69, 90.79, 90.10, 90.18, 90.26, 90.33, 90.40, 90.47, 90.54, 90.60, 90.66, 90.72, 90.28, 90.33, 90.37, 90.42, 90.06, 89.73
+    ]) #debug, example data
+    responses= np.array([1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 1, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 1, 1, 1, 1, 1, 1, 1, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 1, 1, 1, 0, 0, 1
+    ]) #debug, example data
 
 expectedMin = 1.0/26
 #fit curve

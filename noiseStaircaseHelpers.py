@@ -32,64 +32,61 @@ def outOfStaircase(y,staircase):
 
     return x
     
-def printStaircase(staircase, briefTrialUpdate, add=0, mult=1, alsoLog=False):
+def printStaircase(s, briefTrialUpdate, printInternalVal = False, alsoLog=False):
     #if briefTrialUpdate, don't print everything, just the kind of stuff you like to know after each trial
     #needs logging as a global variable, otherwise will fail when alsoLog=True
     #add is what to add to intensities,
     #mult is what to multiply intensities by,  e.g .if descending psychometric function had to fool QUEST by -1*i + 2
-    msg = 'staircase.data (incorrect/correct)=' + str(staircase.data)
+    msg = 'staircase.data (incorrect/correct)=' + str(s.data)
     print(msg)
     if alsoLog:     logging.info(msg)
 
-    msg = '\tstaircase.intensities [' #(these are log intensities)=['
-        if printInternalVal:
-            for i in range( len(staircase.intensities) ):
-                msg += '{:.2f} '.format( staircase.intensities[i] )) #I cant figure out a simpler way to prevent scientific notation
-        msg+= ']'
-        if staircase.log, exponentiated and backTransformed=['
-        for j in range( len(staircase.intensities) ):
-            msg += '{:.2f} '.format( outOfStaircase(staircase.intensities[j]) )
+    if printInternalVal:
+        msg = '\tstaircase.intensities, *internal* values [' #(these are log intensities)=['
+        for i in range( len(s.intensities) ):
+            msg += '{:.2f}, '.format( s.intensities[i] ) #I cant figure out a simpler way to prevent scientific notation
         msg+= ']'
         print(msg)
         if alsoLog:     logging.info(msg)
-        #print(']')
-    else: #linear steps, so dont have to worry about log
-        msg = 'staircase.intensities =' + str( np.around(add + mult*staircase.intensities,3) ) 
-        print(msg)
-        if alsoLog:     logging.info(msg)
-        
+    msg = '\tstaircase.intensities, values [' 
+    for j in range( len(s.intensities) ):
+        msg += '{:.2f}, '.format( outOfStaircase(s.intensities[j], s) )
+    msg+= ']'
+    print(msg)
+    if alsoLog:     logging.info(msg)
+
     if type(staircase) is data.StairHandler:
-        numReversals = len(staircase.reversalIntensities)
+        numReversals = len(s.reversalIntensities)
         msg= 'staircase number of reversals=' + str(numReversals) + '] '
-        msg+= 'reversal noiseProportions=' + str( 1- np.array(add + mult*staircase.reversalIntensities) )
+        msg+= 'reversal noiseProportions=' + str( 1- np.array( outofStaircase(s.reversalIntensities,s)) )
         print(msg)
         if alsoLog:     logging.info(msg)
         if numReversals>0:
             numReversalsToAvg = numReversals-1
             msg= ('mean of final' + str(numReversalsToAvg) + 
-                      ' reversals =' + str( 1-np.average(add + mult*staircase.reversalIntensities[-numReversalsToAvg:]) ) )
+                      ' reversals =' + str( 1-np.average(  outofStaircase(s.reversalIntensities[-numReversalsToAvg:],s),   ) ) )
             print(msg)
             if alsoLog:     logging.info(msg)
-    elif type(staircase) is data.QuestHandler:
+    elif type(s) is data.QuestHandler:
             #some of below are private initialization variables I'm not really supposed to access
             if not briefTrialUpdate:
                 msg= ('\tpThreshold (proportion correct for which trying to zero in on the corresponding parameter value) =' +
-                               str(staircase._quest.pThreshold) + '\n')
+                               str(s._quest.pThreshold) + '\n')
                 msg+= ('\tstopInterval (min 5-95% confidence interval required for  thresh  before stopping. If both this and nTrials is specified, whichever happens first)='+
-                               str(staircase.stopInterval) + '\n')
-                msg+= '\tstepType=' + str(staircase.stepType) + '\n'
-                msg+= '\tminVal=' + str(staircase.minVal) + '  maxVal=' + str(staircase.maxVal) + '\n'
-                msg+= '\tnTrials=' + str(staircase.nTrials)
+                               str(s.stopInterval) + '\n')
+                msg+= '\tstepType=' + str(s.stepType) + '\n'
+                msg+= '\tminVal=' + str(s.minVal) + '  maxVal=' + str(s.maxVal) + '\n'
+                msg+= '\tnTrials=' + str(s.nTrials)
                 print(msg)
                 if alsoLog:     logging.info(msg)
 
     #below applies to both types of staircase
-    if staircase.thisTrialN == -1:
+    if s.thisTrialN == -1:
         msg= 'thisTrialN = -1, suggesting you have not started it yet; need to call staircase.next()'
         print(msg)
         if alsoLog:     logging.info(msg)
     else:
-        msg= 'staircase thisTrialN =' + str(staircase.thisTrialN)
+        msg= 'staircase thisTrialN =' + str(s.thisTrialN)
         print(msg)
         if alsoLog:     logging.info(msg)
         # staircase.calculateNextIntensity() sounds like something useful to get a preview of the next trial. Instead, seems to be 
@@ -191,7 +188,6 @@ def plotDataAndPsychometricCurve(intensities,responses,fit,threshVal):
 
 
 
-
 #Test staircase functions
 threshCriterion = 0.25
 staircaseTrials = 5
@@ -216,4 +212,4 @@ print('Importing responses ',np.array(corrEachTrial),' and intensities ',preface
 #staircase internal will be i = log(100-x)
 #-(10**i)-100
 staircase.importData( toStaircase(prefaceStaircaseNoise), np.array(corrEachTrial) )
-printStaircase(staircase, briefTrialUpdate=False, add=0, mult=1, alsoLog=False)
+printStaircase(staircase, briefTrialUpdate=False, printInternalVal=True, alsoLog=False)
