@@ -77,7 +77,7 @@ checkRefreshEtc = infoFirst['Check refresh etc']
 fullscr = infoFirst['Fullscreen (timing errors if not)']
 refreshRate = infoFirst['Screen refresh rate']
 if checkRefreshEtc:
-    quitFinder = True # False #debugON 
+    quitFinder = True 
 if quitFinder:
     import os
     applescript="\'tell application \"Finder\" to quit\'"
@@ -126,12 +126,12 @@ else: #checkRefreshEtc
             )
     #print(runInfo)
     logging.info(runInfo)
-    print('Finished runInfo') #debugON
+    print('Finished runInfo- which assesses the refresh and processes of this computer') 
     #check screen refresh is what assuming it is ##############################################
     Hzs=list()
     myWin.flip(); myWin.flip();myWin.flip();myWin.flip();
     myWin.setRecordFrameIntervals(True) #otherwise myWin.fps won't work
-    print('About to measure frame flips') #debugON
+    print('About to measure frame flips') 
     for i in range(50):
         myWin.flip()
         Hzs.append( myWin.fps() )  #varies wildly on successive runs!
@@ -152,8 +152,7 @@ else: #checkRefreshEtc
     myWinRes = myWin.size
     myWin.allowGUI =True
 myWin.close() #have to close window to show dialog box
-#core.wait(.5); #debugON
-#STOP
+
 defaultNoiseLevel = 0.0 #to use if no staircase, can be set by user
 trialsPerCondition = 1 #8 #default value
 dlgLabelsOrdered = list()

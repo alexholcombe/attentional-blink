@@ -217,7 +217,6 @@ try:
     if descendingPsycho: 
         intensityForCurveFitting = 100-intensities #because fitWeibull assumes curve is ascending
     fit = data.FitWeibull(intensityForCurveFitting, responses, expectedMin=expectedMin,  sems = 1.0/len(intensityForCurveFitting))
-    print('fit=',end=''); print(fit) #debugON
 except:
     print("Fit failed.")
 plotDataAndPsychometricCurve(staircase,fit,descendingPsycho,threshCriterion)
