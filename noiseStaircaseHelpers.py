@@ -143,7 +143,7 @@ def plotDataAndPsychometricCurve(staircase,fit,descendingPsycho,threshVal):
     pylab.subplot(121)
     pylab.plot(intensLinear)
     pylab.xlabel("staircase trial")
-    pylab.ylabel("log percentNoise")
+    pylab.ylabel("% noise")
     #plot psychometric function on the right.
     ax1 = pylab.subplot(122)
     if fit is not None:

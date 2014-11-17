@@ -708,8 +708,13 @@ if doStaircase:
     myWin.close()
     #Fit and plot data
     fit = None
+try: 
+
     try:
-        fit = data.FitWeibull(staircase.intensities, staircase.data, expectedMin=1/26., sems = 1.0/len(staircase.intensities))
+        intensityForCurveFitting = staircase.intensities
+        if descendingPsycho: 
+            intensityForCurveFitting = 100-staircase.intensities #because fitWeibull assumes curve is ascending
+        fit = data.FitWeibull(intensityForCurveFitting, staircase.data, expectedMin=1/26., sems = 1.0/len(staircase.intensities))
     except:
         print("Fit failed.")
     plotDataAndPsychometricCurve(staircase.intensities, staircase.data,fit, threshCriterion)

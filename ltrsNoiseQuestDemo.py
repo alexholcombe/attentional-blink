@@ -117,7 +117,7 @@ doingStaircasePhase = False #First phase of experiment is method of constant sti
 initialNonstaircaseTrials = np.array([5,20,20,20, 50,50,50,5,80,80,80,5,95,95,95])
 corrEachTrial = list() #only needed for initialNonstaircaseTrials
 overallTrialN = -1
-while (not staircase.finished) and expStop==False: #staircase.thisTrialN < staircase.nTrials
+while (not staircase.finished) and expStop==False:
     if overallTrialN+1 < len(initialNonstaircaseTrials): #still doing initialNonstaircaseTrials
         overallTrialN += 1
         percentNoise = initialNonstaircaseTrials[overallTrialN]
@@ -126,7 +126,9 @@ while (not staircase.finished) and expStop==False: #staircase.thisTrialN < stair
             print('Importing ',corrEachTrial,' and intensities ',initialNonstaircaseTrials)
             staircase.importData( toStaircase(initialNonstaircaseTrials,descendingPsycho), np.array(corrEachTrial)) 
         try: #advance the staircase
-            percentNoise = 100- staircase.next()  #will step through the staircase, based on whether told it (addData) got it right or wrong
+            percentNoise = staircase.next()
+            if descendingPsycho: #this is freaking awkward. Staircase.next() un-logs it, but there's no wrapper for intensities that un-logs them. Psychopy should add that
+               percentNoise = 100- percentNoise  #will step through the staircase, based on whether told it (addData) got it right or wrong
             overallTrialN += 1
         except StopIteration: #Need this here, even though test for finished above. I can't understand why finished test doesn't accomplish this.
             print('stopping because staircase.next() returned a StopIteration, which it is supposed to do when it is finished')
@@ -207,10 +209,10 @@ responses = staircase.data
 expectedMin = 1.0/26
 #fit curve
 fit = None
-try: #does this work with descending function??  NOO
+try: 
     intensityForCurveFitting = intensities
     if descendingPsycho: 
-        intensityForCurveFitting = 100-intensities
+        intensityForCurveFitting = 100-intensities #because fitWeibull assumes curve is ascending
     fit = data.FitWeibull(intensityForCurveFitting, responses, expectedMin=expectedMin,  sems = 1.0/len(intensityForCurveFitting))
     print('fit=',end=''); print(fit) #debugON
 except:
