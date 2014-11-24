@@ -42,11 +42,11 @@ cueColor = [1.,1.,1.]
 letterColor = [1.,1.,1.]
 cueRadius = 6 #6 deg, as in Martini E2    Letters should have height of 2.5 deg
 
-widthPix= 1024 #1280 #monitor width in pixels
-heightPix= 768  #800 #800 #monitor height in pixels
+widthPix= 1280 #monitor width in pixels of Agosta
+heightPix= 800 #800 #monitor height in pixels
 monitorwidth = 38.7 #monitor width in cm
 scrn=0 #0 to use main screen, 1 to use external screen connected to computer
-fullscr=False #True to use fullscreen, False to not. Timing probably won't be quite right if fullscreen = False
+fullscr=True #True to use fullscreen, False to not. Timing probably won't be quite right if fullscreen = False
 allowGUI = False
 if demo: monitorwidth = 23#18.0
 if exportImages:
@@ -154,7 +154,7 @@ else: #checkRefreshEtc
 myWin.close() #have to close window to show dialog box
 
 defaultNoiseLevel = 0.0 #to use if no staircase, can be set by user
-trialsPerCondition = 1 #8 #default value
+trialsPerCondition = 8 #default value
 dlgLabelsOrdered = list()
 if doStaircase:
     myDlg = gui.Dlg(title="Staircase to find appropriate noisePercent", pos=(200,400))
