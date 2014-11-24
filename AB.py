@@ -605,6 +605,7 @@ def play_high_tone_correct_low_incorrect(correct, passThisTrial=False):
         low.play()
 
 expStop=False; framesSaved=0
+nDoneMain = -1 #change to zero once start main part of experiment
 if doStaircase:
     #create the staircase handler
     useQuest = True
@@ -793,7 +794,7 @@ timeAndDateStr = time.strftime("%H:%M on %d %b %Y", time.localtime())
 msg = 'Finishing at '+timeAndDateStr
 print(msg); logging.info(msg)
 if expStop:
-    msg = 'user aborted experiment on keypress with trials done='+ str(nDoneMain) + ' of ' + str(trials.nTotal+1)
+    msg = 'user aborted experiment on keypress with trials done=' + str(nDoneMain) + ' of ' + str(trials.nTotal+1)
     print(msg); logging.error(msg)
 
 if not doStaircase and (nDoneMain >0):
