@@ -1,4 +1,5 @@
 from pandas import Series, DataFrame
+import numpy as np
 #calculate mean at each level of list
 # http://pandas.pydata.org/pandas-docs/dev/groupby.html
 lst = [1, 2, 3, 1, 2, 3]
@@ -17,7 +18,7 @@ df= DataFrame({'intensity': intensities, 'response': responses})
 grouped = df.groupby('intensity')
 print('mean at each intensity')
 groupedMeans = grouped.mean()
-print( groupedMeans )
+print( np.around(groupedMeans,3) )
 y=list(groupedMeans['response'])
 print('list(groupedMeans)=',y)
 
