@@ -201,29 +201,30 @@ def plotDataAndPsychometricCurve(staircase,fit,descendingPsycho,threshVal):
 #    pylab.savefig(outputFile)
 
 
-#Test staircase functions
-threshCriterion = 0.25
-staircaseTrials = 5
-staircase = data.QuestHandler(startVal = 95, 
-                      startValSd = 80,
-                      stopInterval= 1, #sd of posterior has to be this small or smaller for staircase to stop, unless nTrials reached
-                      nTrials = staircaseTrials,
-                      #extraInfo = thisInfo,
-                      pThreshold = threshCriterion, #0.25,    
-                      gamma = 1./26,
-                      delta=0.02, #lapse rate, I suppose for Weibull function fit
-                      method = 'quantile', #uses the median of the posterior as the final answer
-                      stepType = 'log',  #will home in on the 80% threshold. But stepType = 'log' doesn't usually work
-                      minVal=1, maxVal = 100
-                      )
-print('created QUEST staircase')
-
-descendingPsycho = True
-prefaceStaircaseNoise = np.array([5,95]) #will be recycled / not all used, as needed
-corrEachTrial = list([1,0])
-print('Importing responses ',np.array(corrEachTrial),' and intensities ',prefaceStaircaseNoise)
-#Act of importing will cause staircase to log transform
-#staircase internal will be i = log(100-x)
-#-(10**i)-100
-staircase.importData( toStaircase(prefaceStaircaseNoise,descendingPsycho), np.array(corrEachTrial) )
-printStaircase(staircase, briefTrialUpdate=False, printInternalVal=True, alsoLog=False)
+if __name__ == "__main__":
+    #Test staircase functions
+    threshCriterion = 0.25
+    staircaseTrials = 5
+    staircase = data.QuestHandler(startVal = 95, 
+                          startValSd = 80,
+                          stopInterval= 1, #sd of posterior has to be this small or smaller for staircase to stop, unless nTrials reached
+                          nTrials = staircaseTrials,
+                          #extraInfo = thisInfo,
+                          pThreshold = threshCriterion, #0.25,    
+                          gamma = 1./26,
+                          delta=0.02, #lapse rate, I suppose for Weibull function fit
+                          method = 'quantile', #uses the median of the posterior as the final answer
+                          stepType = 'log',  #will home in on the 80% threshold. But stepType = 'log' doesn't usually work
+                          minVal=1, maxVal = 100
+                          )
+    print('created QUEST staircase')
+    
+    descendingPsycho = True
+    prefaceStaircaseNoise = np.array([5,95]) #will be recycled / not all used, as needed
+    corrEachTrial = list([1,0])
+    print('Importing responses ',np.array(corrEachTrial),' and intensities ',prefaceStaircaseNoise)
+    #Act of importing will cause staircase to log transform
+    #staircase internal will be i = log(100-x)
+    #-(10**i)-100
+    staircase.importData( toStaircase(prefaceStaircaseNoise,descendingPsycho), np.array(corrEachTrial) )
+    printStaircase(staircase, briefTrialUpdate=False, printInternalVal=True, alsoLog=False)
