@@ -8,7 +8,15 @@ import numpy as np
 from math import atan, log, ceil
 from copy import deepcopy
 import time, sys, os, pylab
-from noiseStaircaseHelpers import printStaircase, toStaircase, outOfStaircase, createNoise, plotDataAndPsychometricCurve
+try:
+    from noiseStaircaseHelpers import printStaircase, toStaircase, outOfStaircase, createNoise, plotDataAndPsychometricCurve
+except ImportError:
+    print('Could not import from noiseStaircaseHelpers.py (you need that file to be in the same directory)')
+try:
+    import stringResponse
+except ImportError:
+    print('Could not import strongResponse.py (you need that file to be in the same directory)')
+
 descendingPsycho = True
 tasks=['T1','T1T2']; task = tasks[0]
 #THINGS THAT COULD PREVENT SUCCESS ON A STRANGE MACHINE
@@ -63,7 +71,7 @@ pixelperdegree = widthPix/ (atan(monitorwidth/viewdist) /np.pi*180)
 print('pixelperdegree=',pixelperdegree)
     
 # create a dialog from dictionary 
-infoFirst = { 'Do staircase (only)': False, 'Check refresh etc':True, 'Fullscreen (timing errors if not)': True, 'Screen refresh rate': 60 }
+infoFirst = { 'Do staircase (only)': False, 'Check refresh etc':False, 'Fullscreen (timing errors if not)': False, 'Screen refresh rate': 60 }
 OK = gui.DlgFromDict(dictionary=infoFirst, 
     title='AB experiment OR staircase to find thresh noise level for T1 performance criterion', 
     order=['Do staircase (only)', 'Check refresh etc', 'Fullscreen (timing errors if not)'], 
@@ -208,7 +216,6 @@ if myDlg.OK: #unpack information from dialogue box
            print('prefaceStaircaseTrialsN entered by user=',thisInfo[dlgLabelsOrdered.index('easyTrials')])
            logging.info('prefaceStaircaseTrialsN entered by user=',prefaceStaircaseTrialsN)
    else: #not doing staircase
-            #if len(thisInfo[dlgLabelsOrdered.index('trialsPerCondition')]) > 0: #if entered something for trialsPerCondition
        trialsPerCondition = int( thisInfo[ dlgLabelsOrdered.index('trialsPerCondition') ] ) #convert string to integer
        print('trialsPerCondition=',trialsPerCondition)
        logging.info('trialsPerCondition =',trialsPerCondition)
@@ -274,8 +281,13 @@ fixatnNoiseTexture = np.round( np.random.rand(fixSizePix/4,fixSizePix/4) ,0 )   
 fixation= visual.PatchStim(myWin, tex=fixatnNoiseTexture, size=(fixSizePix,fixSizePix), units='pix', mask='circle', interpolate=False, autoLog=False)
 fixationBlank= visual.PatchStim(myWin, tex= -1*fixatnNoiseTexture, size=(fixSizePix,fixSizePix), units='pix', mask='circle', interpolate=False, autoLog=False) #reverse contrast
 fixationPoint= visual.PatchStim(myWin,tex='none',colorSpace='rgb',color=(1,1,1),size=10,units='pix',autoLog=autoLogging)
-respPromptText = visual.TextStim(myWin,pos=(0, -.9),colorSpace='rgb',color=(1,1,1),alignHoriz='center', alignVert='center',height=.1,units='norm',autoLog=autoLogging)
-respText = visual.TextStim(myWin,pos=(0,0),colorSpace='rgb',color=(1,1,0),alignHoriz='center', alignVert='center',height=.16,units='norm',autoLog=autoLogging)
+
+respPromptStim = visual.TextStim(myWin,pos=(0, -.9),colorSpace='rgb',color=(1,1,1),alignHoriz='center', alignVert='center',height=.1,units='norm',autoLog=autoLogging)
+acceptTextStim = visual.TextStim(myWin,pos=(0, -.8),colorSpace='rgb',color=(1,1,1),alignHoriz='center', alignVert='center',height=.1,units='norm',autoLog=autoLogging)
+acceptTextStim.setText('Hit ENTER to accept. Backspace to edit')
+respStim = visual.TextStim(myWin,pos=(0,0),colorSpace='rgb',color=(1,1,0),alignHoriz='center', alignVert='center',height=.16,units='norm',autoLog=autoLogging)
+clickSound, badKeySound = stringResponse.setupSoundsForResponse()
+requireAcceptance = False
 nextText = visual.TextStim(myWin,pos=(0, .1),colorSpace='rgb',color = (1,1,1),alignHoriz='center', alignVert='center',height=.1,units='norm',autoLog=autoLogging)
 NextRemindCountText = visual.TextStim(myWin,pos=(0,.2),colorSpace='rgb',color= (1,1,1),alignHoriz='center', alignVert='center',height=.1,units='norm',autoLog=autoLogging)
 screenshot= False; screenshotDone = False
@@ -383,7 +395,7 @@ def collectResponses(task,numRespsWanted,responseDebug=False):
         noResponseYet=True
         thisResponse=''
         while noResponseYet: #collect one response
-           respPromptText.draw()
+           respPromptStim.draw()
            #respStr= 'Y'
            #print 'respStr = ', respStr, ' type=',type(respStr) #debugOFF
            respText.setText(respStr,log=False)
@@ -543,10 +555,10 @@ def do_RSVP_stim(cue1pos, cue2lag, proportnNoise,trialN):
     myWin.setRecordFrameIntervals(False);
 
     if task=='T1':
-        respPromptText.setText('Which letter was circled?',log=False)
+        respPromptStim.setText('Which letter was circled?',log=False)
     elif task=='T1T2':
-        respPromptText.setText('Which two letters were circled?',log=False)
-    else: respPromptText.setText('Error: unexpected task',log=False)
+        respPromptStim.setText('Which two letters were circled?',log=False)
+    else: respPromptStim.setText('Error: unexpected task',log=False)
     postCueNumBlobsAway=-999 #doesn't apply to non-tracking and click tracking task
     return letterSequence,cuesPos,correctAnswers, ts  
     
@@ -666,9 +678,12 @@ if doStaircase:
         letterSequence,cuesPos,correctAnswers, ts  = do_RSVP_stim(cue1pos, cue2lag, noisePercent/100.,staircaseTrialN)
         numCasesInterframeLong = timingCheckAndLog(ts,staircaseTrialN)
         
-        responseDebug=False; responses = list(); responsesAutopilot = list();
         expStop,passThisTrial,responses,responsesAutopilot = \
-                    collectResponses(task,numRespsWanted,responseDebug=True)
+                stringResponse.collectStringResponse(numRespsWanted,respPromptStim,respStim,acceptTextStim,myWin,clickSound,badKeySound,
+                                                                               requireAcceptance,autopilot,responseDebug=True)
+                
+        #expStop,passThisTrial,responses,responsesAutopilot = \
+         #           collectResponses(task,numRespsWanted,responseDebug=True)
         if not expStop:
             if mainStaircaseGoing:
                 print('staircase\t', end='', file=dataFile)
@@ -742,8 +757,14 @@ else: #not staircase
         numCasesInterframeLong = timingCheckAndLog(ts,nDoneMain)
         
         responseDebug=False; responses = list(); responsesAutopilot = list();
+        #expStop,passThisTrial,responses,responsesAutopilot = \
+        #            collectResponses(task,numRespsWanted,responseDebug=True)
         expStop,passThisTrial,responses,responsesAutopilot = \
-                    collectResponses(task,numRespsWanted,responseDebug=True)
+                stringResponse.collectStringResponse(numRespsWanted,respPromptStim,respStim,acceptTextStim,myWin,clickSound,badKeySound,
+                                                                                requireAcceptance,autopilot,responseDebug=True)
+        print('responses=',responses)
+        print('expStop=',expStop,' passThisTrial=',passThisTrial,' responses=',responses, ' responsesAutopilot =', responsesAutopilot)
+        STOP
         if not expStop:
             print('main\t', end='', file=dataFile) #first thing printed on each line of dataFile
             print(nDoneMain,'\t', end='', file=dataFile)
