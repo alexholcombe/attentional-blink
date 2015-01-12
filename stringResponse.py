@@ -28,7 +28,7 @@ def collectStringResponse(numCharsWanted,respPromptStim,respStim,acceptTextStim,
     if requireAcceptance: #require user to hit ENTER to finalize response
         accepted = False
 
-    while not expStop and numResponses < numCharsWanted and not accepted:
+    while not expStop and (numResponses < numCharsWanted or not accepted):
     # (numResponses < numCharsWanted and not expStop) or not accepted:
     #while (numResponses < numCharsWanted and not expStop) or not accepted:
         print 'numResponses=', numResponses #debugOFF
@@ -74,7 +74,7 @@ def collectStringResponse(numCharsWanted,respPromptStim,respStim,acceptTextStim,
         drawResponses(responses,respStim,numCharsWanted,drawBlanks)
         myWin.flip() #draw again, otherwise won't draw the last key
         
-        if numResponses == numCharsWanted:  #ask participant to HIT ENTER TO ACCEPT
+        if (numResponses == numCharsWanted) and requireAcceptance:  #ask participant to HIT ENTER TO ACCEPT
             waitingForAccept = True
             while waitingForAccept and not expStop:
                 acceptTextStim.draw()
@@ -138,10 +138,11 @@ if __name__=='__main__':  #Running this file directly, must want to test functio
     respStim = visual.TextStim(window,pos=(0,0),colorSpace='rgb',color=(1,1,0),alignHoriz='center', alignVert='center',height=.16,units='norm',autoLog=autoLogging)
 
     responseDebug=False; responses = list(); responsesAutopilot = list();
-    numCharsWanted = 4
+    numCharsWanted = 2
     respPromptStim.setText('Enter your ' + str(numCharsWanted) + '-character response')
     requireAcceptance = True
     expStop,passThisTrial,responses,responsesAutopilot = \
                 collectStringResponse(numCharsWanted,respPromptStim,respStim,acceptTextStim,window,clickSound,badKeySound,requireAcceptance,autopilot,responseDebug=True)
     print('responses=',responses)
     print('expStop=',expStop,' passThisTrial=',passThisTrial,' responses=',responses, ' responsesAutopilot =', responsesAutopilot)
+    print('Finished') 
