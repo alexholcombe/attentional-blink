@@ -18,7 +18,7 @@ except ImportError:
     print('Could not import strongResponse.py (you need that file to be in the same directory)')
 
 descendingPsycho = True
-tasks=['T1','T1T2']; task = tasks[0]
+tasks=['T1','T1T2']; task = tasks[1]
 #THINGS THAT COULD PREVENT SUCCESS ON A STRANGE MACHINE
 #same screen or external screen? Set scrn=0 if one screen. scrn=1 means display stimulus on second screen.
 #widthPix, heightPix
@@ -36,7 +36,7 @@ else:
 timeAndDateStr = time.strftime("%d%b%Y_%H-%M", time.localtime())
 
 showRefreshMisses=True #flicker fixation at refresh rate, to visualize if frames missed
-feedback=False #Martini didn't include feedback
+feedback=True
 autoLogging=False
 if demo:
     refreshRate = 60.;  #100
@@ -94,7 +94,7 @@ if quitFinder:
 
 #letter size 2.5 deg
 numLettersToPresent = 26
-SOAms = 133
+SOAms = 133 #Battelli, Agosta, Goodbourn, Holcombe mostly using 133
 #Minimum SOAms should be 84  because any shorter, I can't always notice the second ring when lag1.   71 in Martini E2 and E1b (actually he used 66.6 but that's because he had a crazy refresh rate of 90 Hz)
 letterDurMs = 80 #23.6  in Martini E2 and E1b (actually he used 22.2 but that's because he had a crazy refresh rate of 90 Hz)
 
