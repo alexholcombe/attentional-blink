@@ -630,9 +630,7 @@ if doStaircase:
         expStop,passThisTrial,responses,responsesAutopilot = \
                 stringResponse.collectStringResponse(numRespsWanted,respPromptStim,respStim,acceptTextStim,myWin,clickSound,badKeySound,
                                                                                requireAcceptance,autopilot,responseDebug=True)
-                
-        #expStop,passThisTrial,responses,responsesAutopilot = \
-         #           collectResponses(task,numRespsWanted,responseDebug=True)
+
         if not expStop:
             if mainStaircaseGoing:
                 print('staircase\t', end='', file=dataFile)
@@ -706,8 +704,6 @@ else: #not staircase
         numCasesInterframeLong = timingCheckAndLog(ts,nDoneMain)
         
         responseDebug=False; responses = list(); responsesAutopilot = list();
-        #expStop,passThisTrial,responses,responsesAutopilot = \
-        #            collectResponses(task,numRespsWanted,responseDebug=True)
         expStop,passThisTrial,responses,responsesAutopilot = \
                 stringResponse.collectStringResponse(numRespsWanted,respPromptStim,respStim,acceptTextStim,myWin,clickSound,badKeySound,
                                                                                 requireAcceptance,autopilot,responseDebug=True)
