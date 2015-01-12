@@ -10,7 +10,7 @@ from copy import deepcopy
 import time, sys, os, pylab
 from noiseStaircaseHelpers import printStaircase, toStaircase, outOfStaircase, createNoise, plotDataAndPsychometricCurve
 descendingPsycho = True
-tasks=['T1','T1T2']; task = tasks[1]
+tasks=['T1','T1T2']; task = tasks[0]
 #THINGS THAT COULD PREVENT SUCCESS ON A STRANGE MACHINE
 #same screen or external screen? Set scrn=0 if one screen. scrn=1 means display stimulus on second screen.
 #widthPix, heightPix
@@ -161,7 +161,7 @@ if doStaircase:
 else: 
     myDlg = gui.Dlg(title="RSVP experiment", pos=(200,400))
 if not autopilot:
-    myDlg.addField('Subject name (default="Hubert"):', tip='or subject code')
+    myDlg.addField('Subject name (default="Hubert"):', 'Hubert', tip='or subject code')
     dlgLabelsOrdered.append('subject')
 if doStaircase:
     easyTrialsCondText = 'Num preassigned noise trials to preface staircase with (default=' + str(prefaceStaircaseTrialsN) + '):'
@@ -173,7 +173,7 @@ if doStaircase:
 else:
     myDlg.addField('\tPercent noise dots=',  defaultNoiseLevel, tip=str(defaultNoiseLevel))
     dlgLabelsOrdered.append('defaultNoiseLevel')
-    myDlg.addField('Trials per condition (default=' + str(trialsPerCondition) + '):', tip=str(trialsPerCondition))
+    myDlg.addField('Trials per condition (default=' + str(trialsPerCondition) + '):', trialsPerCondition, tip=str(trialsPerCondition))
     dlgLabelsOrdered.append('trialsPerCondition')
     pctCompletedBreak = 50
     
@@ -208,10 +208,10 @@ if myDlg.OK: #unpack information from dialogue box
            print('prefaceStaircaseTrialsN entered by user=',thisInfo[dlgLabelsOrdered.index('easyTrials')])
            logging.info('prefaceStaircaseTrialsN entered by user=',prefaceStaircaseTrialsN)
    else: #not doing staircase
-       if len(thisInfo[dlgLabelsOrdered.index('trialsPerCondition')]) > 0: #if entered something for trialsPerCondition
-           trialsPerCondition = int( thisInfo[ dlgLabelsOrdered.index('trialsPerCondition') ] ) #convert string to integer
-           print('trialsPerCondition entered by user=',trialsPerCondition)
-           logging.info('trialsPerCondition entered by user=',trialsPerCondition)
+            #if len(thisInfo[dlgLabelsOrdered.index('trialsPerCondition')]) > 0: #if entered something for trialsPerCondition
+       trialsPerCondition = int( thisInfo[ dlgLabelsOrdered.index('trialsPerCondition') ] ) #convert string to integer
+       print('trialsPerCondition=',trialsPerCondition)
+       logging.info('trialsPerCondition =',trialsPerCondition)
        defaultNoiseLevel = int (thisInfo[ dlgLabelsOrdered.index('defaultNoiseLevel') ])
 else: 
    print('User cancelled from dialog box.')
@@ -735,7 +735,9 @@ else: #not staircase
             logging.info(msg); print(msg)
         thisTrial = trials.next() #get a proper (non-staircase) trial
         cue1pos = thisTrial['cue1pos']
-        cue2lag = thisTrial['cue2lag']
+        cue2lag = None
+        if task=="T1T2":
+            cue2lag = thisTrial['cue2lag']
         letterSequence,cuesPos,correctAnswers,ts  = do_RSVP_stim(cue1pos, cue2lag, noisePercent/100.,nDoneMain)
         numCasesInterframeLong = timingCheckAndLog(ts,nDoneMain)
         
@@ -754,10 +756,11 @@ else: #not staircase
             numTrialsApproxCorrect += eachApproxCorrect.all()
             numTrialsEachCorrect += eachCorrect
             numTrialsEachApproxCorrect += eachApproxCorrect
-            cue2lagIdx = list(possibleCue2lags).index(cue2lag)
-            nTrialsCorrectT2eachLag[cue2lagIdx] += eachCorrect[1]
-            nTrialsApproxCorrectT2eachLag[cue2lagIdx] += eachApproxCorrect[1]
-            nTrialsEachLag[cue2lagIdx] += 1
+            if task=="T1T2":
+                cue2lagIdx = list(possibleCue2lags).index(cue2lag)
+                nTrialsCorrectT2eachLag[cue2lagIdx] += eachCorrect[1]
+                nTrialsApproxCorrectT2eachLag[cue2lagIdx] += eachApproxCorrect[1]
+                nTrialsEachLag[cue2lagIdx] += 1
                 
             if exportImages:  #catches one frame of response
                  myWin.getMovieFrame() #I cant explain why another getMovieFrame, and core.wait is needed
