@@ -29,8 +29,6 @@ def collectStringResponse(numCharsWanted,respPromptStim,respStim,acceptTextStim,
         accepted = False
 
     while not expStop and (numResponses < numCharsWanted or not accepted):
-    # (numResponses < numCharsWanted and not expStop) or not accepted:
-    #while (numResponses < numCharsWanted and not expStop) or not accepted:
         print 'numResponses=', numResponses #debugOFF
         print 'expStop=',expStop
         print 'accepted=',accepted
@@ -44,6 +42,7 @@ def collectStringResponse(numCharsWanted,respPromptStim,respStim,acceptTextStim,
            keysPressed = event.getKeys();            #print 'keysPressed = ', keysPressed
            if autopilot:
                noResponseYet = False
+               numResponses = numCharsWanted
                if 'ESCAPE' in keysPressed:
                    expStop = True
            elif len(keysPressed) > 0:

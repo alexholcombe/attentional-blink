@@ -17,12 +17,12 @@ except ImportError:
     print('Could not import strongResponse.py (you need that file to be in the same directory)')
 
 descendingPsycho = True
-tasks=['T1','T1T2']; task = tasks[0]
+tasks=['T1','T1T2']; task = tasks[1]
 #THINGS THAT COULD PREVENT SUCCESS ON A STRANGE MACHINE
 #same screen or external screen? Set scrn=0 if one screen. scrn=1 means display stimulus on second screen.
 #widthPix, heightPix
 quitFinder = False #if checkRefreshEtc, quitFinder becomes True
-autopilot=False
+autopilot=True
 demo=False #False
 exportImages= False #quits after one trial
 subject='Hubert' #user is prompted to enter true subject name
@@ -310,8 +310,6 @@ logging.info( 'numtrials=' + str(trials.nTotal) + ' and each trialDurFrames='+st
 
 def numberToLetter(number): #0 = A, 25 = Z
     #if it's not really a letter, return @
-    #if type(number) != type(5) and type(number) != type(np.array([3])[0]): #not an integer or numpy.int32
-    #    return ('@')
     if number < 0 or number > 25:
         return ('@')
     else: #it's probably a letter
@@ -338,6 +336,8 @@ def wordToIdx(word,wordList):
     try:
         #http://stackoverflow.com/questions/7102050/how-can-i-get-a-python-generator-to-return-none-rather-than-stopiteration
         firstMatchIdx = next((i for i, val in enumerate(wordList) if val==word), None) #return i (index) unless no matches, in which case return None
+        #print('Looked for ',word,' in ',wordList,'\nfirstMatchIdx =',firstMatchIdx)
+        return firstMatchIdx
     except:
         print('Unexpected error in wordToIdx with word=',word)
         return (None)
@@ -457,22 +457,22 @@ nTrialsApproxCorrectT2eachLag = np.zeros(len(possibleCue2lags));
 
 wordsUnparsed="the, and, for, you, say, but, his, not, she, can, who, get, her, all, one, out, see, him, now, how, its, our, two, way, new, cat" #25 most common words, plus cat
 wordsUnparsed = "a,b,c,d,e,f,g,h,i,j,k,l,m,n,o,p,q,r,s,t,u,v,w,x,y,z".upper()
-words = wordsUnparsed.split(",") #split into list
-for i in range(len(words)):
-    words[i] = words[i].replace(" ", "") #delete spaces
+wordList = wordsUnparsed.split(",") #split into list
+for i in range(len(wordList)):
+    wordList[i] = wordList[i].replace(" ", "") #delete spaces
     
 textStimuli = list()
 def calcAndPredrawStimuli():
     #counting on global variable textStimuli
-    if len(words) < 26:
-        print('Error! Your word list must have at least 26 words')
-    idxsIntoWordList = np.arange( len(words) ) #create a list of indexes of the entire word list
-    print('words=',words)
+    if len(wordList) < 26:
+        print('Error! Your word list must have at least 26 wordList')
+    idxsIntoWordList = np.arange( len(wordList) ) #create a list of indexes of the entire word list
+    print('wordList=',wordList)
     np.random.shuffle(idxsIntoWordList)
     for i in range(0,26): #draw the words that will be used on this trial, the first 26 of the shuffled list
        textStimulus = visual.TextStim(myWin,pos=(0,0),colorSpace='rgb',color=letterColor,alignHoriz='center',alignVert='center',units='deg',autoLog=autoLogging)
        textStimulus.setHeight( ltrHeight )
-       word = words[ i ]  #     #[ idxsIntoWordList[i] ]
+       word = wordList[ i ]  #     #[ idxsIntoWordList[i] ]
        textStimulus.setText(word, log=False)
        textStimulus.setColor(bgColor)
        textStimuli.append(textStimulus)
@@ -535,7 +535,7 @@ def do_RSVP_stim(cue1pos, cue2lag, seq1, seq2, proportnNoise,trialN):
     else: respPromptStim.setText('Error: unexpected task',log=False)
     postCueNumBlobsAway=-999 #doesn't apply to non-tracking and click tracking task
     correctAnswerIdxs = np.array( seq1[cuesPos] )
-    print('correctAnswerIdxs=',correctAnswerIdxs, 'words[correctAnswerIdxs[0]]=',words[correctAnswerIdxs[0]])
+    print('correctAnswerIdxs=',correctAnswerIdxs, 'wordList[correctAnswerIdxs[0]]=',wordList[correctAnswerIdxs[0]])
     return cuesPos,correctAnswerIdxs, ts
     
     
@@ -545,20 +545,21 @@ def handleAndScoreResponse(passThisTrial,responses,responsesAutopilot,task,stimS
     #correctAnswer is index into stimSequence
     if autopilot or passThisTrial:
         responses = responsesAutopilot
-    print('handleAndScoreResponse correctAnswerIdxs=',correctAnswerIdxs,'\nstimSequence=',stimSequence, '\nwords=',words)
+    print('handleAndScoreResponse correctAnswerIdxs=',correctAnswerIdxs,'\nstimSequence=',stimSequence, '\nwords=',wordList)
     print('letterToNumber(responses[0])==',letterToNumber(responses[0]))
     eachCorrect = np.zeros( len(correctAnswerIdxs) )
     eachApproxCorrect = np.zeros( len(correctAnswerIdxs) )
     posOfResponse = np.zeros( len(cuesPos) )
     responsePosRelative = np.zeros( len(cuesPos) )
     for i in range(len(cuesPos)): #score response to each cue
-        idx = correctAnswerIdxs[0]
-        answer = words[idx]
+        idx = correctAnswerIdxs[i]
+        answer = wordList[idx]
         print('answer=',answer)
-        if answer == responses[i]: # letterToNumber( responses[i] ):
+        if answer == responses[i]: 
             eachCorrect[i] = 1
         print('eachCorrect[0]=',eachCorrect[0])
-        posThisResponse= np.where( wordToIdx(responses[i])==stimSequence )
+        posThisResponse= np.where( wordToIdx(responses[i],wordList)==stimSequence )
+        print('wordToIdx(',responses[i],',',wordList,')=',wordToIdx(responses[i],wordList),' stimSequence=',stimSequence,'\nposThisResponse = ',posThisResponse) #debugON
         posThisResponse= posThisResponse[0] #list with potentially two entries, want first which will be array of places where the reponse was found in the letter sequence
         if len(posThisResponse) > 1:
             logging.error('Expected response to have occurred in only one position in stream')
@@ -574,8 +575,8 @@ def handleAndScoreResponse(passThisTrial,responses,responsesAutopilot,task,stimS
     for i in range(len(cuesPos)): #print response stuff to dataFile
         #header was answerPos0, answer0, response0, correct0, responsePosRelative0
         print(cuesPos[i],'\t', end='', file=dataFile)
-        answerCharacter = numberToLetter( stimSequence[ cuesPos[i] ] )
-        print(answerCharacter, '\t', end='', file=dataFile) #answer0
+        answerString = wordList[ correctAnswerIdxs[i] ]
+        print(answerString, '\t', end='', file=dataFile) #answer0
         print(responses[i], '\t', end='', file=dataFile) #response0
         print(eachCorrect[i] , '\t', end='',file=dataFile)   #correct0
         print(responsePosRelative[i], '\t', end='',file=dataFile) #responsePosRelative0
