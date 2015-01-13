@@ -17,7 +17,7 @@ except ImportError:
     print('Could not import strongResponse.py (you need that file to be in the same directory)')
 
 descendingPsycho = True
-tasks=['T1','T1T2']; task = tasks[1]
+tasks=['T1','T1T2']; task = tasks[0]
 #THINGS THAT COULD PREVENT SUCCESS ON A STRANGE MACHINE
 #same screen or external screen? Set scrn=0 if one screen. scrn=1 means display stimulus on second screen.
 #widthPix, heightPix
@@ -93,7 +93,7 @@ if quitFinder:
 
 #letter size 2.5 deg
 numLettersToPresent = 26
-SOAms = 133 #Battelli, Agosta, Goodbourn, Holcombe mostly using 133
+SOAms = 233 #Battelli, Agosta, Goodbourn, Holcombe mostly using 133
 #Minimum SOAms should be 84  because any shorter, I can't always notice the second ring when lag1.   71 in Martini E2 and E1b (actually he used 66.6 but that's because he had a crazy refresh rate of 90 Hz)
 letterDurMs = 80 #23.6  in Martini E2 and E1b (actually he used 22.2 but that's because he had a crazy refresh rate of 90 Hz)
 
@@ -333,6 +333,15 @@ def letterToNumber(letter): #A = 0, Z = 25
     except:
         return (-999)
 
+def wordToIdx(word,wordList):
+    #if it's not in the list of stimuli, return -999
+    try:
+        #http://stackoverflow.com/questions/7102050/how-can-i-get-a-python-generator-to-return-none-rather-than-stopiteration
+        firstMatchIdx = next((i for i, val in enumerate(wordList) if val==word), None) #return i (index) unless no matches, in which case return None
+    except:
+        print('Unexpected error in wordToIdx with word=',word)
+        return (None)
+        
 #print header for data file
 print('experimentPhase\ttrialnum\tsubject\ttask\t',file=dataFile,end='')
 print('noisePercent\t',end='',file=dataFile)
@@ -446,23 +455,31 @@ numTrialsEachApproxCorrect= np.zeros( numRespsWanted )
 nTrialsCorrectT2eachLag = np.zeros(len(possibleCue2lags)); nTrialsEachLag = np.zeros(len(possibleCue2lags))
 nTrialsApproxCorrectT2eachLag = np.zeros(len(possibleCue2lags));
 
+wordsUnparsed="the, and, for, you, say, but, his, not, she, can, who, get, her, all, one, out, see, him, now, how, its, our, two, way, new, cat" #25 most common words, plus cat
+wordsUnparsed = "a,b,c,d,e,f,g,h,i,j,k,l,m,n,o,p,q,r,s,t,u,v,w,x,y,z".upper()
+words = wordsUnparsed.split(",") #split into list
+for i in range(len(words)):
+    words[i] = words[i].replace(" ", "") #delete spaces
+    
 textStimuli = list()
 def calcAndPredrawStimuli():
     #counting on global variable textStimuli
-    for i in range(0,26):
+    if len(words) < 26:
+        print('Error! Your word list must have at least 26 words')
+    idxsIntoWordList = np.arange( len(words) ) #create a list of indexes of the entire word list
+    print('words=',words)
+    np.random.shuffle(idxsIntoWordList)
+    for i in range(0,26): #draw the words that will be used on this trial, the first 26 of the shuffled list
        textStimulus = visual.TextStim(myWin,pos=(0,0),colorSpace='rgb',color=letterColor,alignHoriz='center',alignVert='center',units='deg',autoLog=autoLogging)
        textStimulus.setHeight( ltrHeight )
-       letter = numberToLetter(i)
-       textStimulus.setText(letter,log=False)
+       word = words[ i ]  #     #[ idxsIntoWordList[i] ]
+       textStimulus.setText(word, log=False)
        textStimulus.setColor(bgColor)
        textStimuli.append(textStimulus)
-   
-    letterSequence = np.arange(0,26)
-    np.random.shuffle(letterSequence)
-    sequenceLeft = letterSequence #copy.deepcopy?
-    #print('sequenceLeft when created=',sequenceLeft)
+
+    sequenceLeft = idxsIntoWordList
     sequenceRight = None
-    #print('sequenceLeft within calcAndPreDrawStimuli =', sequenceLeft)
+    print('sequenceLeft within calcAndPreDrawStimuli =', sequenceLeft)
     return sequenceLeft, sequenceRight
     
 def do_RSVP_stim(cue1pos, cue2lag, seq1, seq2, proportnNoise,trialN):
@@ -474,7 +491,6 @@ def do_RSVP_stim(cue1pos, cue2lag, seq1, seq2, proportnNoise,trialN):
     if task=='T1T2':
         cuesPos.append(cue1pos+cue2lag)
     cuesPos = np.array(cuesPos)
-    correctAnswerIdxs = np.array( seq1[cuesPos] )
     noise = None; allFieldCoords=None; numNoiseDots=0
     if proportnNoise > 0: #gtenerating noise is time-consuming, so only do it once per trial. Then shuffle noise coordinates for each letter
         (noise,allFieldCoords,numNoiseDots) = createNoise(proportnNoise,myWin,noiseFieldWidthPix, bgColor)
@@ -518,24 +534,31 @@ def do_RSVP_stim(cue1pos, cue2lag, seq1, seq2, proportnNoise,trialN):
         respPromptStim.setText('Which two letters were circled?',log=False)
     else: respPromptStim.setText('Error: unexpected task',log=False)
     postCueNumBlobsAway=-999 #doesn't apply to non-tracking and click tracking task
+    correctAnswerIdxs = np.array( seq1[cuesPos] )
+    print('correctAnswerIdxs=',correctAnswerIdxs, 'words[correctAnswerIdxs[0]]=',words[correctAnswerIdxs[0]])
     return cuesPos,correctAnswerIdxs, ts
     
-def handleAndScoreResponse(passThisTrial,responses,responsesAutopilot,task,stimSequence,cuesPos,correctAnswers):
+    
+def handleAndScoreResponse(passThisTrial,responses,responsesAutopilot,task,stimSequence,cuesPos,correctAnswerIdxs):
     #Handle response, calculate whether correct, ########################################
     #responses are actual characters
-    #correctAnswer is index into letterSequence
+    #correctAnswer is index into stimSequence
     if autopilot or passThisTrial:
         responses = responsesAutopilot
-    print('correctAnswers=',correctAnswers,' stimSequence=',stimSequence)
-    eachCorrect = np.zeros( len(correctAnswers) )
-    eachApproxCorrect = np.zeros( len(correctAnswers) )
+    print('handleAndScoreResponse correctAnswerIdxs=',correctAnswerIdxs,'\nstimSequence=',stimSequence, '\nwords=',words)
+    print('letterToNumber(responses[0])==',letterToNumber(responses[0]))
+    eachCorrect = np.zeros( len(correctAnswerIdxs) )
+    eachApproxCorrect = np.zeros( len(correctAnswerIdxs) )
     posOfResponse = np.zeros( len(cuesPos) )
     responsePosRelative = np.zeros( len(cuesPos) )
     for i in range(len(cuesPos)): #score response to each cue
-        if correctAnswers[i] == letterToNumber( responses[i] ):
+        idx = correctAnswerIdxs[0]
+        answer = words[idx]
+        print('answer=',answer)
+        if answer == responses[i]: # letterToNumber( responses[i] ):
             eachCorrect[i] = 1
-        posThisResponse= np.where( letterToNumber(responses[i])==stimSequence )
-        #print 'responses=',responses,'posThisResponse raw=',posThisResponse, ' letterSequence=',letterSequence #debugOFF
+        print('eachCorrect[0]=',eachCorrect[0])
+        posThisResponse= np.where( wordToIdx(responses[i])==stimSequence )
         posThisResponse= posThisResponse[0] #list with potentially two entries, want first which will be array of places where the reponse was found in the letter sequence
         if len(posThisResponse) > 1:
             logging.error('Expected response to have occurred in only one position in stream')
@@ -713,8 +736,7 @@ else: #not staircase
         if task=="T1T2":
             cue2lag = thisTrial['cue2lag']
         sequenceLeft, sequenceRight = calcAndPredrawStimuli()
-        cuesPos,correctAnswers, ts  = do_RSVP_stim(cue1pos, cue2lag, sequenceLeft, sequenceRight, noisePercent/100.,nDoneMain)
-        print('correctAnswers=',correctAnswers)
+        cuesPos,correctAnswerIdxs, ts  = do_RSVP_stim(cue1pos, cue2lag, sequenceLeft, sequenceRight, noisePercent/100.,nDoneMain)
         numCasesInterframeLong = timingCheckAndLog(ts,nDoneMain)
         
         expStop,passThisTrial,responses,responsesAutopilot = \
@@ -728,7 +750,7 @@ else: #not staircase
             print(nDoneMain,'\t', end='', file=dataFile)
             print(subject,'\t',task,'\t', round(noisePercent,3),'\t', end='', file=dataFile)
             correct,eachCorrect,eachApproxCorrect,T1approxCorrect,passThisTrial,expStop = (
-                    handleAndScoreResponse(passThisTrial,responses,responsesAutopilot,task,sequenceLeft,cuesPos,correctAnswers) )
+                    handleAndScoreResponse(passThisTrial,responses,responsesAutopilot,task,sequenceLeft,cuesPos,correctAnswerIdxs) )
             print(numCasesInterframeLong, file=dataFile) #timingBlips, last thing recorded on each line of dataFile
         
             numTrialsCorrect += correct #so count -1 as 0
