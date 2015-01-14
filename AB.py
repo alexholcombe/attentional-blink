@@ -16,7 +16,7 @@ try:
 except ImportError:
     print('Could not import strongResponse.py (you need that file to be in the same directory)')
 
-descendingPsycho = True
+wordEccentricity=3
 tasks=['T1','T1T2']; task = tasks[0]
 #THINGS THAT COULD PREVENT SUCCESS ON A STRANGE MACHINE
 #same screen or external screen? Set scrn=0 if one screen. scrn=1 means display stimulus on second screen.
@@ -43,6 +43,8 @@ if demo:
 staircaseTrials = 25
 prefaceStaircaseTrialsN = 20 #22
 prefaceStaircaseNoise = np.array([5,20,20,20, 50,50,50,5,80,80,80,5,95,95,95]) #will be recycled / not all used, as needed
+descendingPsycho = True #psychometric function- more noise means worse performance
+
 threshCriterion = 0.58
 bgColor = [-.7,-.7,-.7] # [-1,-1,-1]
 cueColor = [1.,1.,1.]
@@ -52,7 +54,7 @@ cueRadius = 6 #6 deg, as in Martini E2    Letters should have height of 2.5 deg
 widthPix= 1280 #monitor width in pixels of Agosta
 heightPix= 800 #800 #monitor height in pixels
 monitorwidth = 38.7 #monitor width in cm
-scrn=0 #0 to use main screen, 1 to use external screen connected to computer
+scrn=1 #0 to use main screen, 1 to use external screen connected to computer
 fullscr=True #True to use fullscreen, False to not. Timing probably won't be quite right if fullscreen = False
 allowGUI = False
 if demo: monitorwidth = 23#18.0
@@ -93,7 +95,7 @@ if quitFinder:
 
 #letter size 2.5 deg
 numLettersToPresent = 26
-SOAms = 233 #Battelli, Agosta, Goodbourn, Holcombe mostly using 133
+SOAms = 133 #Battelli, Agosta, Goodbourn, Holcombe mostly using 133
 #Minimum SOAms should be 84  because any shorter, I can't always notice the second ring when lag1.   71 in Martini E2 and E1b (actually he used 66.6 but that's because he had a crazy refresh rate of 90 Hz)
 letterDurMs = 80 #23.6  in Martini E2 and E1b (actually he used 22.2 but that's because he had a crazy refresh rate of 90 Hz)
 
@@ -284,7 +286,7 @@ fixationPoint= visual.PatchStim(myWin,tex='none',colorSpace='rgb',color=(1,1,1),
 respPromptStim = visual.TextStim(myWin,pos=(0, -.9),colorSpace='rgb',color=(1,1,1),alignHoriz='center', alignVert='center',height=.1,units='norm',autoLog=autoLogging)
 acceptTextStim = visual.TextStim(myWin,pos=(0, -.8),colorSpace='rgb',color=(1,1,1),alignHoriz='center', alignVert='center',height=.1,units='norm',autoLog=autoLogging)
 acceptTextStim.setText('Hit ENTER to accept. Backspace to edit')
-respStim = visual.TextStim(myWin,pos=(0,0),colorSpace='rgb',color=(1,1,0),alignHoriz='center', alignVert='center',height=.16,units='norm',autoLog=autoLogging)
+respStim = visual.TextStim(myWin,pos=(0,0),colorSpace='rgb',color=(1,1,0),alignHoriz='center', alignVert='center',height=3,units='deg',autoLog=autoLogging)
 clickSound, badKeySound = stringResponse.setupSoundsForResponse()
 requireAcceptance = False
 nextText = visual.TextStim(myWin,pos=(0, .1),colorSpace='rgb',color = (1,1,1),alignHoriz='center', alignVert='center',height=.1,units='norm',autoLog=autoLogging)
@@ -346,9 +348,9 @@ def wordToIdx(word,wordList):
 print('experimentPhase\ttrialnum\tsubject\ttask\t',file=dataFile,end='')
 print('noisePercent\t',end='',file=dataFile)
 if task=='T1':
-    numRespsWanted = 1
-elif task=='T1T2':
     numRespsWanted = 2
+elif task=='T1T2':
+    numRespsWanted = 4
 for i in range(numRespsWanted):
    dataFile.write('answerPos'+str(i)+'\t')   #have to use write to avoid ' ' between successive text, at least until Python 3
    dataFile.write('answer'+str(i)+'\t')
@@ -477,9 +479,9 @@ def calcAndPredrawStimuli():
        word = wordList[ i ]  #     #[ idxsIntoWordList[i] ]
        textStimulusStream1 = visual.TextStim(myWin,text=word,height=ltrHeight,colorSpace='rgb',color=letterColor,alignHoriz='center',alignVert='center',units='deg',autoLog=autoLogging)
        textStimulusStream2 = visual.TextStim(myWin,text=word,height=ltrHeight,colorSpace='rgb',color=letterColor,alignHoriz='center',alignVert='center',units='deg',autoLog=autoLogging)
-       textStimulusStream1.setPos([-3,0]) #left
+       textStimulusStream1.setPos([-wordEccentricity,0]) #left
        textStimuliStream1.append(textStimulusStream1)
-       textStimulusStream2.setPos([3,0]) #right
+       textStimulusStream2.setPos([wordEccentricity,0]) #right
        textStimuliStream2.append(textStimulusStream2)
 
     idxsStream1 = idxsIntoWordList #first RSVP stream
@@ -537,14 +539,14 @@ def do_RSVP_stim(cue1pos, cue2lag, seq1, seq2, proportnNoise,trialN):
     myWin.setRecordFrameIntervals(False);
 
     if task=='T1':
-        respPromptStim.setText('Which was circled?',log=False)   
+        respPromptStim.setText('What was circled?',log=False)   
     elif task=='T1T2':
         respPromptStim.setText('Which two were circled?',log=False)
     else: respPromptStim.setText('Error: unexpected task',log=False)
     postCueNumBlobsAway=-999 #doesn't apply to non-tracking and click tracking task
     correctAnswerIdxsStream1 = np.array( seq1[cuesPos] )
     correctAnswerIdxsStream2 = np.array( seq2[cuesPos] )
-    print('correctAnswerIdxs=',correctAnswerIdxs, 'wordList[correctAnswerIdxsStream1[0]]=',wordList[correctAnswerIdxsStream1[0]])
+    print('correctAnswerIdxsStream1=',correctAnswerIdxsStream1, 'wordList[correctAnswerIdxsStream1[0]]=',wordList[correctAnswerIdxsStream1[0]])
     return cuesPos,correctAnswerIdxsStream1,correctAnswerIdxsStream2,ts
     
 def handleAndScoreResponse(passThisTrial,response,responseAutopilot,task,stimSequence,cuePos,correctAnswerIdx):
@@ -750,8 +752,10 @@ else: #not staircase
         expStop = list(); passThisTrial = list(); responses=list(); responsesAutopilot=list()
         numCharsInResponse = len(wordList[0])
         for i in range(numRespsWanted):
+            x = 3* wordEccentricity*(i*2-1) #put it farther out, so participant is sure which is left and which right
+            print('About to solicit response number',i) #debugON
             eStop,passThis,response,responseAutopilot = stringResponse.collectStringResponse(
-                                      numCharsInResponse,respPromptStim,respStim,acceptTextStim,myWin,clickSound,badKeySound,
+                                      numCharsInResponse,x,respPromptStim,respStim,acceptTextStim,fixationPoint,myWin,clickSound,badKeySound,
                                                                                    requireAcceptance,autopilot,responseDebug=True)
             expStop.append(eStop); passThisTrial.append(passThis); responses.append(response); responsesAutopilot.append(responseAutopilot)
                                                                                
@@ -765,8 +769,11 @@ else: #not staircase
             i = 0
             eachCorrect = np.ones(numRespsWanted)*-999; eachApproxCorrect = np.ones(numRespsWanted)*-999
             for i in range(numRespsWanted):
+                if i==0:
+                    sequenceStream = sequenceStream1; correctAnswerIdxs = correctAnswerIdxsStream1; 
+                else: sequenceStream = sequenceStream2; correctAnswerIdxs = correctAnswerIdxsStream2; 
                 correct,approxCorrect,responsePosRelative = (
-                        handleAndScoreResponse(passThisTrial,responses[i],responsesAutopilot[i],task,sequenceLeft,cuesPos[i],correctAnswerIdxs[i]) )
+                        handleAndScoreResponse(passThisTrial,responses[i],responsesAutopilot[i],task,sequenceStream,cuesPos[i],correctAnswerIdxs ) )
                 eachCorrect[i] = correct
                 eachApproxCorrect[i] = approxCorrect
             print(numCasesInterframeLong, file=dataFile) #timingBlips, last thing recorded on each line of dataFile

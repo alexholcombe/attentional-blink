@@ -15,10 +15,12 @@ def drawResponses(responses,respStim,numCharsWanted,drawBlanks):
     respStim.setText(respStr,log=False)
     respStim.draw(); 
         
-def collectStringResponse(numCharsWanted,respPromptStim,respStim,acceptTextStim,myWin,clickSound,badKeySound,requireAcceptance,autopilot,responseDebug=False): 
+def collectStringResponse(numCharsWanted,x,respPromptStim,respStim,acceptTextStim,fixation,myWin,
+                                               clickSound,badKeySound,requireAcceptance,autopilot,responseDebug=False): 
     '''respPromptStim should be a stimulus with a draw() method
     '''
     event.clearEvents() #clear the keyboard buffer
+    respStim.setPos([x,0])
     drawBlanks = True
     expStop = False
     passThisTrial = False
@@ -27,11 +29,12 @@ def collectStringResponse(numCharsWanted,respPromptStim,respStim,acceptTextStim,
     accepted = True
     if requireAcceptance: #require user to hit ENTER to finalize response
         accepted = False
-
     while not expStop and (numResponses < numCharsWanted or not accepted):
         noResponseYet = True
         thisResponse=''
         while noResponseYet: #loop until a valid key is hit
+           if fixation is not None:
+                fixation.draw()
            respPromptStim.draw()
            drawResponses(responses,respStim,numCharsWanted,drawBlanks)
            myWin.flip()
@@ -73,6 +76,8 @@ def collectStringResponse(numCharsWanted,respPromptStim,respStim,acceptTextStim,
         if (numResponses == numCharsWanted) and requireAcceptance:  #ask participant to HIT ENTER TO ACCEPT
             waitingForAccept = True
             while waitingForAccept and not expStop:
+                if fixation is not None:
+                    fixation.draw()
                 acceptTextStim.draw()
                 respStim.draw()
                 for key in event.getKeys():
@@ -137,8 +142,9 @@ if __name__=='__main__':  #Running this file directly, must want to test functio
     numCharsWanted = 2
     respPromptStim.setText('Enter your ' + str(numCharsWanted) + '-character response')
     requireAcceptance = True
+    x=-.2 #x offset relative to centre of screen
     expStop,passThisTrial,responses,responsesAutopilot = \
-                collectStringResponse(numCharsWanted,respPromptStim,respStim,acceptTextStim,window,clickSound,badKeySound,requireAcceptance,autopilot,responseDebug=True)
+                collectStringResponse(numCharsWanted,x,respPromptStim,respStim,acceptTextStim,None,window,clickSound,badKeySound,requireAcceptance,autopilot,responseDebug=True)
     print('responses=',responses)
     print('expStop=',expStop,' passThisTrial=',passThisTrial,' responses=',responses, ' responsesAutopilot =', responsesAutopilot)
     print('Finished') 
