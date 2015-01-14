@@ -5,7 +5,7 @@ from psychopy import monitors, visual, event, data, logging, core, sound, gui
 import psychopy.info
 import numpy as np
 from math import atan, log, ceil
-from copy import deepcopy
+import copy
 import time, sys, os, pylab
 try:
     from noiseStaircaseHelpers import printStaircase, toStaircase, outOfStaircase, createNoise, plotDataAndPsychometricCurve
@@ -358,7 +358,7 @@ for i in range(numRespsWanted):
 print('timingBlips',file=dataFile)
 #end of header
 
-def  oneFrameOfStim( n,cue,seq1,seq2,cueDurFrames,letterDurFrames,ISIframes,cuesPos,textStimuli,
+def  oneFrameOfStim( n,cue,seq1,seq2,cueDurFrames,letterDurFrames,ISIframes,cuesPos,textStimuliStream1,textStimuliStream2,
                                        noise,proportnNoise,allFieldCoords,numNoiseDots ): 
 #defining a function to draw each frame of stim.
 #seq1 is an array of indices corresponding to the appropriate pre-drawn stimulus, contained in textStimuli
@@ -378,10 +378,13 @@ def  oneFrameOfStim( n,cue,seq1,seq2,cueDurFrames,letterDurFrames,ISIframes,cues
          cue.setLineColor( cueColor )
 
   if showLetter:
-     textStimuli[thisStimIdx].setColor( letterColor )
-  else: textStimuli[thisStimIdx].setColor( bgColor )
-  
-  textStimuli[thisStimIdx].draw()
+     textStimuliStream1[thisStimIdx].setColor( letterColor )
+     textStimuliStream2[thisStim2Idx].setColor( letterColor )
+  else: 
+    textStimuliStream1[thisStimIdx].setColor( bgColor )
+    textStimuliStream2[thisStim2Idx].setColor( bgColor )
+  textStimuliStream1[thisStimIdx].draw()
+  textStimuliStream2[thisStim2Idx].draw()
   cue.draw()
   refreshNoise = False #Not recommended because takes longer than a frame, even to shuffle apparently. Or may be setXYs step
   if proportnNoise>0 and refreshNoise: 
@@ -462,27 +465,30 @@ wordList = wordsUnparsed.split(",") #split into list
 for i in range(len(wordList)):
     wordList[i] = wordList[i].replace(" ", "") #delete spaces
     
-textStimuli = list()
+textStimuliStream1 = list()
+textStimuliStream2 = list() #used for second, simultaneous RSVP stream
 def calcAndPredrawStimuli():
     #counting on global variable textStimuli
     if len(wordList) < 26:
         print('Error! Your word list must have at least 26 wordList')
     idxsIntoWordList = np.arange( len(wordList) ) #create a list of indexes of the entire word list
     print('wordList=',wordList)
-    np.random.shuffle(idxsIntoWordList)
     for i in range(0,26): #draw the words that will be used on this trial, the first 26 of the shuffled list
-       textStimulus = visual.TextStim(myWin,pos=(0,0),colorSpace='rgb',color=letterColor,alignHoriz='center',alignVert='center',units='deg',autoLog=autoLogging)
-       textStimulus.setHeight( ltrHeight )
        word = wordList[ i ]  #     #[ idxsIntoWordList[i] ]
-       textStimulus.setText(word, log=False)
-       textStimulus.setColor(bgColor)
-       textStimuli.append(textStimulus)
+       textStimulusStream1 = visual.TextStim(myWin,text=word,height=ltrHeight,colorSpace='rgb',color=letterColor,alignHoriz='center',alignVert='center',units='deg',autoLog=autoLogging)
+       textStimulusStream2 = visual.TextStim(myWin,text=word,height=ltrHeight,colorSpace='rgb',color=letterColor,alignHoriz='center',alignVert='center',units='deg',autoLog=autoLogging)
+       textStimulusStream1.setPos([-3,0]) #left
+       textStimuliStream1.append(textStimulusStream1)
+       textStimulusStream2.setPos([3,0]) #right
+       textStimuliStream2.append(textStimulusStream2)
 
-    sequenceLeft = idxsIntoWordList #first RSVP stream
-    sequenceRight = None #potential simultaneous RSVP stream
-    print('sequenceLeft within calcAndPreDrawStimuli =', sequenceLeft)
-    return sequenceLeft, sequenceRight
-    
+    idxsStream1 = idxsIntoWordList #first RSVP stream
+    np.random.shuffle(idxsIntoWordList)
+    idxsStream2 = copy.deepcopy(idxsIntoWordList)
+    np.random.shuffle(idxsStream2)
+    print('idxsStream1 =',idxsStream1,'\nidxStream2=',idxsStream2)
+    return idxsStream1, idxsStream2
+
 def do_RSVP_stim(cue1pos, cue2lag, seq1, seq2, proportnNoise,trialN):
     #relies on global variables:
     #   textStimuli, logging, bgColor
@@ -519,8 +525,9 @@ def do_RSVP_stim(cue1pos, cue2lag, seq1, seq2, proportnNoise,trialN):
     t0 = trialClock.getTime()
 
     for n in range(trialDurFrames): #this is the loop for this trial's stimulus!
-        worked = oneFrameOfStim( n,cue,seq1,seq2,cueDurFrames,letterDurFrames,ISIframes,cuesPos,textStimuli,
-                                                     noise,proportnNoise,allFieldCoords,numNoiseDots) #draw letter and possibly cue and noise on top
+        worked = oneFrameOfStim( n,cue,seq1,seq2,cueDurFrames,letterDurFrames,ISIframes,cuesPos,textStimuliStream1,textStimuliStream2,
+                                                     noise,proportnNoise,allFieldCoords,numNoiseDots ) #draw letter and possibly cue and noise on top
+        fixationPoint.draw()
         if exportImages:
             myWin.getMovieFrame(buffer='back') #for later saving
             framesSaved +=1
@@ -535,9 +542,10 @@ def do_RSVP_stim(cue1pos, cue2lag, seq1, seq2, proportnNoise,trialN):
         respPromptStim.setText('Which two were circled?',log=False)
     else: respPromptStim.setText('Error: unexpected task',log=False)
     postCueNumBlobsAway=-999 #doesn't apply to non-tracking and click tracking task
-    correctAnswerIdxs = np.array( seq1[cuesPos] )
-    print('correctAnswerIdxs=',correctAnswerIdxs, 'wordList[correctAnswerIdxs[0]]=',wordList[correctAnswerIdxs[0]])
-    return cuesPos,correctAnswerIdxs, ts
+    correctAnswerIdxsStream1 = np.array( seq1[cuesPos] )
+    correctAnswerIdxsStream2 = np.array( seq2[cuesPos] )
+    print('correctAnswerIdxs=',correctAnswerIdxs, 'wordList[correctAnswerIdxsStream1[0]]=',wordList[correctAnswerIdxsStream1[0]])
+    return cuesPos,correctAnswerIdxsStream1,correctAnswerIdxsStream2,ts
     
 def handleAndScoreResponse(passThisTrial,response,responseAutopilot,task,stimSequence,cuePos,correctAnswerIdx):
     #Handle response, calculate whether correct, ########################################
@@ -657,8 +665,9 @@ if doStaircase:
                 print('stopping because staircase.next() returned a StopIteration, which it does when it is finished')
                 break #break out of the trials loop
         #print('staircaseTrialN=',staircaseTrialN)
-        sequenceLeft, sequenceRight = calcAndPredrawStimuli()
-        cuesPos,correctAnswerIdxs, ts  = do_RSVP_stim(cue1pos, cue2lag, sequenceLeft, sequenceRight, noisePercent/100.,staircaseTrialN)
+        idxsStream1, idxsStream2 = calcAndPredrawStimuli()
+        cuesPos,correctAnswerIdxsStream1,correctAnswerIdxsStream2, ts  = \
+                                        do_RSVP_stim(cue1pos, cue2lag, idxsStream1, idxsStream2, noisePercent/100.,staircaseTrialN)
         numCasesInterframeLong = timingCheckAndLog(ts,staircaseTrialN)
         expStop,passThisTrial,responses,responsesAutopilot = \
                 stringResponse.collectStringResponse(numRespsWanted,respPromptStim,respStim,acceptTextStim,myWin,clickSound,badKeySound,
@@ -733,8 +742,9 @@ else: #not staircase
         cue2lag = None
         if task=="T1T2":
             cue2lag = thisTrial['cue2lag']
-        sequenceLeft, sequenceRight = calcAndPredrawStimuli()
-        cuesPos,correctAnswerIdxs, ts  = do_RSVP_stim(cue1pos, cue2lag, sequenceLeft, sequenceRight, noisePercent/100.,nDoneMain)
+        sequenceStream1, sequenceStream2 = calcAndPredrawStimuli()
+        cuesPos,correctAnswerIdxsStream1,correctAnswerIdxsStream2, ts  = \
+                                                                    do_RSVP_stim(cue1pos, cue2lag, sequenceStream1, sequenceStream2, noisePercent/100.,nDoneMain)
         numCasesInterframeLong = timingCheckAndLog(ts,nDoneMain)
         #call individually for each response
         expStop = list(); passThisTrial = list(); responses=list(); responsesAutopilot=list()
