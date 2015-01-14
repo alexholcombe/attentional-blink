@@ -54,7 +54,7 @@ cueRadius = 6 #6 deg, as in Martini E2    Letters should have height of 2.5 deg
 widthPix= 1280 #monitor width in pixels of Agosta
 heightPix= 800 #800 #monitor height in pixels
 monitorwidth = 38.7 #monitor width in cm
-scrn=1 #0 to use main screen, 1 to use external screen connected to computer
+scrn=0 #0 to use main screen, 1 to use external screen connected to computer
 fullscr=True #True to use fullscreen, False to not. Timing probably won't be quite right if fullscreen = False
 allowGUI = False
 if demo: monitorwidth = 23#18.0
@@ -95,7 +95,7 @@ if quitFinder:
 
 #letter size 2.5 deg
 numLettersToPresent = 26
-SOAms = 133 #Battelli, Agosta, Goodbourn, Holcombe mostly using 133
+SOAms = 233 #Battelli, Agosta, Goodbourn, Holcombe mostly using 133
 #Minimum SOAms should be 84  because any shorter, I can't always notice the second ring when lag1.   71 in Martini E2 and E1b (actually he used 66.6 but that's because he had a crazy refresh rate of 90 Hz)
 letterDurMs = 80 #23.6  in Martini E2 and E1b (actually he used 22.2 but that's because he had a crazy refresh rate of 90 Hz)
 
@@ -338,7 +338,7 @@ def wordToIdx(word,wordList):
     try:
         #http://stackoverflow.com/questions/7102050/how-can-i-get-a-python-generator-to-return-none-rather-than-stopiteration
         firstMatchIdx = next((i for i, val in enumerate(wordList) if val.upper()==word), None) #return i (index) unless no matches, in which case return None
-        print('Looked for ',word,' in ',wordList,'\nfirstMatchIdx =',firstMatchIdx)
+        #print('Looked for ',word,' in ',wordList,'\nfirstMatchIdx =',firstMatchIdx)
         return firstMatchIdx
     except:
         print('Unexpected error in wordToIdx with word=',word)
@@ -488,7 +488,6 @@ def calcAndPredrawStimuli():
     np.random.shuffle(idxsIntoWordList)
     idxsStream2 = copy.deepcopy(idxsIntoWordList)
     np.random.shuffle(idxsStream2)
-    print('idxsStream1 =',idxsStream1,'\nidxStream2=',idxsStream2)
     return idxsStream1, idxsStream2
 
 def do_RSVP_stim(cue1pos, cue2lag, seq1, seq2, proportnNoise,trialN):
@@ -567,7 +566,7 @@ def handleAndScoreResponse(passThisTrial,response,responseAutopilot,task,stimSeq
     responseString= ''.join(['%s' % char for char in response])
     responseString= responseString.upper()
     print('correctAnswer=',correctAnswer ,' responseString=',responseString)
-    if correctAnswer == responseString: #EITHER CHANGE STRING TO ARRAY OR CHANGE RESPONSE ARRAY TO STRING
+    if correctAnswer == responseString:
         correct = 1
     print('correct=',correct)
     responseWordIdx = wordToIdx(responseString,wordList)
@@ -587,7 +586,7 @@ def handleAndScoreResponse(passThisTrial,response,responseAutopilot,task,stimSeq
     #header was answerPos0, answer0, response0, correct0, responsePosRelative0
     print(cuePos,'\t', end='', file=dataFile)
     print(correctAnswer, '\t', end='', file=dataFile) #answer0
-    print(response, '\t', end='', file=dataFile) #response0
+    print(responseString, '\t', end='', file=dataFile) #response0
     print(correct, '\t', end='',file=dataFile)   #correct0
     print(responsePosRelative, '\t', end='',file=dataFile) #responsePosRelative0
 
@@ -753,7 +752,6 @@ else: #not staircase
         numCharsInResponse = len(wordList[0])
         for i in range(numRespsWanted):
             x = 3* wordEccentricity*(i*2-1) #put it farther out, so participant is sure which is left and which right
-            print('About to solicit response number',i) #debugON
             eStop,passThis,response,responseAutopilot = stringResponse.collectStringResponse(
                                       numCharsInResponse,x,respPromptStim,respStim,acceptTextStim,fixationPoint,myWin,clickSound,badKeySound,
                                                                                    requireAcceptance,autopilot,responseDebug=True)
@@ -773,7 +771,7 @@ else: #not staircase
                     sequenceStream = sequenceStream1; correctAnswerIdxs = correctAnswerIdxsStream1; 
                 else: sequenceStream = sequenceStream2; correctAnswerIdxs = correctAnswerIdxsStream2; 
                 correct,approxCorrect,responsePosRelative = (
-                        handleAndScoreResponse(passThisTrial,responses[i],responsesAutopilot[i],task,sequenceStream,cuesPos[i],correctAnswerIdxs ) )
+                        handleAndScoreResponse(passThisTrial,responses[i],responsesAutopilot[i],task,sequenceStream,cuesPos[0],correctAnswerIdxs ) )
                 eachCorrect[i] = correct
                 eachApproxCorrect[i] = approxCorrect
             print(numCasesInterframeLong, file=dataFile) #timingBlips, last thing recorded on each line of dataFile
