@@ -135,6 +135,8 @@ def plotDataAndPsychometricCurve(staircase,fit,descendingPsycho,threshVal):
         if descendingPsycho:
             intensitiesForFit = 100-intensitiesForCurve
             thresh = 100 - thresh
+        else:
+            intensitiesForFit = intensitiesForCurve
         ysForCurve = fit.eval(intensitiesForFit)
         #print('intensitiesForCurve=',intensitiesForCurve)
         #print('ysForCurve=',ysForCurve) #debug
