@@ -17,7 +17,7 @@ except ImportError:
     print('Could not import strongResponse.py (you need that file to be in the same directory)')
 
 wordEccentricity=3
-tasks=['T1','T1T2']; task = tasks[0]
+tasks=['T1','T1T2']; task = tasks[1]
 #THINGS THAT COULD PREVENT SUCCESS ON A STRANGE MACHINE
 #same screen or external screen? Set scrn=0 if one screen. scrn=1 means display stimulus on second screen.
 #widthPix, heightPix
@@ -463,7 +463,7 @@ if task=='T1T2':
             
 wordsUnparsed="the, and, for, you, say, but, his, not, she, can, who, get, her, all, one, out, see, him, now, how, its, our, two, way, new, cat" #25 most common words, plus cat
 lettersUnparsed = "a,b,c,d,e,f,g,h,i,j,k,l,m,n,o,p,q,r,s,t,u,v,w,x,y,z".upper()
-wordList = wordsUnparsed.split(",") #split into list
+wordList = lettersUnparsed.split(",") #split into list
 for i in range(len(wordList)):
     wordList[i] = wordList[i].replace(" ", "") #delete spaces
     

@@ -39,7 +39,10 @@ def collectStringResponse(numCharsWanted,x,respPromptStim,respStim,acceptTextSti
            drawResponses(responses,respStim,numCharsWanted,drawBlanks)
            myWin.flip()
            click =  False
-           keysPressed = event.getKeys();            #print 'keysPressed = ', keysPressed
+           if autopilot: #need to wait otherwise dont have chance to press a key 
+                for f in range(20): core.wait(1.0/60) #myWin.flip()
+           keysPressed = event.getKeys()         #print 'keysPressed = ', keysPressed
+           keysPressed = [key.upper() for key in keysPressed] #transform to uppercase
            if autopilot:
                noResponseYet = False
                numResponses = numCharsWanted
@@ -48,7 +51,6 @@ def collectStringResponse(numCharsWanted,x,respPromptStim,respStim,acceptTextSti
            elif len(keysPressed) > 0:
                 key = keysPressed[-1] #process only the last key, it being the most recent. In theory person could type more than one key between window flips, 
                 #but that might be hard to handle.
-                key = key.upper()
                 thisResponse = key
                 if key in ['ESCAPE']:
                      expStop = True
@@ -139,7 +141,7 @@ if __name__=='__main__':  #Running this file directly, must want to test functio
     respStim = visual.TextStim(window,pos=(0,0),colorSpace='rgb',color=(1,1,0),alignHoriz='center', alignVert='center',height=.16,units='norm',autoLog=autoLogging)
 
     responseDebug=False; responses = list(); responsesAutopilot = list();
-    numCharsWanted = 2
+    numCharsWanted = 5
     respPromptStim.setText('Enter your ' + str(numCharsWanted) + '-character response')
     requireAcceptance = True
     x=-.2 #x offset relative to centre of screen
