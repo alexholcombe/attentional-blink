@@ -54,7 +54,7 @@ def printStaircase(s, descendingPsycho=False, briefTrialUpdate=False, printInter
     print(msg)
     if alsoLog:     logging.info(msg)
 
-    if type(staircase) is data.StairHandler:
+    if type(s) is data.StairHandler:
         numReversals = len(s.reversalIntensities)
         msg= 'staircase number of reversals=' + str(numReversals) + '] '
         msg+= 'reversal noiseProportions=' + str( 1- np.array( outofStaircase(s.reversalIntensities,s,descendingPsycho)) )
@@ -200,7 +200,6 @@ def plotDataAndPsychometricCurve(staircase,fit,descendingPsycho,threshVal):
 #    outputFile = os.path.join(dataDir, 'test.pdf')
 #    pylab.savefig(outputFile)
 
-
 if __name__ == "__main__":
     #Test staircase functions
     threshCriterion = 0.25
@@ -220,11 +219,30 @@ if __name__ == "__main__":
     print('created QUEST staircase')
     
     descendingPsycho = True
-    prefaceStaircaseNoise = np.array([5,95]) #will be recycled / not all used, as needed
-    corrEachTrial = list([1,0])
+    prefaceStaircaseNoise = np.array([5,5,5,5,10,10,10,10,20,20,20,50,50,50,70,70,70,80,80,80,80,80,95,95,95]) #will be recycled / not all used, as needed
+    centeredOnZero = prefaceStaircaseNoise/100. -0.5
+    pCorrEachTrial = 1. / (1. + np.exp(-5*centeredOnZero)) #sigmoidal probability
+    print('pCorrEachTrial=',np.around(pCorrEachTrial,2))
+    corrEachTrial = np.zeros( len(prefaceStaircaseNoise) )
+    for i in range( len(prefaceStaircaseNoise) ):
+        corrEachTrial[i] = np.random.binomial( 1, pCorrEachTrial[i] )
+    print('corrEachTrial=',corrEachTrial)
+    #list([1,0,])
     print('Importing responses ',np.array(corrEachTrial),' and intensities ',prefaceStaircaseNoise)
     #Act of importing will cause staircase to log transform
     #staircase internal will be i = log(100-x)
     #-(10**i)-100
     staircase.importData( toStaircase(prefaceStaircaseNoise,descendingPsycho), np.array(corrEachTrial) )
     printStaircase(staircase, briefTrialUpdate=False, printInternalVal=True, alsoLog=False)
+
+    #Fit and plot data
+    descendingPsycho = False
+    fit = None
+    try:
+        intensityForCurveFitting = staircase.intensities
+        if descendingPsycho: 
+            intensityForCurveFitting = 100-staircase.intensities #because fitWeibull assumes curve is ascending
+        fit = data.FitWeibull(intensityForCurveFitting, staircase.data, expectedMin=1/26., sems = 1.0/len(staircase.intensities))
+    except:
+        print("Fit failed.")
+    plotDataAndPsychometricCurve(staircase,fit,descendingPsycho,threshVal=0.75)
