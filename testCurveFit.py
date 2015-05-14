@@ -13,7 +13,7 @@ except:
     
 #my data
 x=np.array( [5.0, 10.0, 20.0, 50.0, 70.0, 80.0, 95.0])
-y=np.array(  [0.0, 0.0, 0.0, 0.57, 1.0, 1.0, 1.0] ) #bad FIT FAILS
+y=np.array(  [0.0, 0.0, 0.0, 0.57, 1.0, 1.0, 1.0] ) #bad FIT FAILS. Doesnt seem to like zeros
 
 expectedMin =0
 try:
