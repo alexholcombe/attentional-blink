@@ -8,7 +8,7 @@ Main version **AB.py** includes optional noise staircase, finding noise level to
 
 **ltrsNoiseQuestDemo.py** is a playground for how the noise and staircase work. 
 
-Used in collaborations with Cellini, Mednick, McDevitt, & Goodbourn on sleep. Also Agosta, Battelli, & Goodbourn on left parietal lobe patients.
+Used in [Cellini et al. (2015)](http://dx.doi.org/10.3758/s13414-015-0912-7) and with Agosta, Battelli, & Goodbourn on left parietal lobe patients.
 
 ###Empirical background
 Martini AB data were the averages of 20 undergrads. Each contributed 4 consecutive blocks of 100 trials, total time about 35 minutes. The parameters were identical to Vul 2008, 
@@ -18,15 +18,13 @@ In experiment 1b I used 15Hz streams, 2 blocks of 100 trials, and that takes rou
 There is some learning, Martini  measured it in experiment 1a with repeat subjects (graph attached), so you should check whether your effects would be washed out by this. 
 Also, experiment 1b was run with T1 fixed, i.e. the cue was always in the midstream position.
 
-For published analyses of serial position errors, also see 
-* Martini (2012) Attention Perception & Psychophysics "SOURCES OF BIAS AND UNCERTAINTY IN A VISUAL TEMPORAL INDIVIDUATION TASK"
-* Goodbourn & Holcombe (2014 in press).  Journal of Experimental Psychology: Human Perception & Performance
+For detailed analysis of serial position errors, see Goodbourn & Holcombe (2014).  Journal of Experimental Psychology: Human Perception & Performance
 
 ####Instructions
 
-**Motivation**: Our parietal patients had poor T1 performance of around 58% approximately (Vul et al.) correct. Their attentional blink curve looks different from the elderly controls, but the lower T1 performance is a confound. 
-
 ####Optional staircase phase
+
+**Motivation**: Our parietal patients had poor T1 performance of around 58% approximately (Vul et al.) correct. Their attentional blink curve looks different from the elderly controls, but the lower T1 performance is a confound. 
 
 To reduce the T1 performance of a subject (elderly control in our case), we add noise to the letters. To determine the noise level needed to reduce performance to 58% correct, run AB.py and choose the staircase experiment. You are then prompted to modify the staircase parameters, if you like, before the staircase is run and the results plotted at the end, like this: 
 ![staircase plot](https://github.com/alexholcombe/attentional-blink/blob/master/example_staircase_plot.jpg "staircase plot")
