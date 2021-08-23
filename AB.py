@@ -678,7 +678,7 @@ if doStaircase:
             intensityForCurveFitting = 100-staircase.intensities #because fitWeibull assumes curve is ascending
         fit = data.FitWeibull(intensityForCurveFitting, staircase.data, expectedMin=1/26., sems = 1.0/len(staircase.intensities))
     except:
-        print("Fit failed.")
+        print("Fit failed. (But QUEST probably still returned its estimate of threshold)")
     plotDataAndPsychometricCurve(staircase,fit,descendingPsycho,threshCriterion)
     #save figure to file
     pylab.savefig(fileName+'.pdf')

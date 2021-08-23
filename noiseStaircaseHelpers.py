@@ -93,6 +93,7 @@ def printStaircase(s, descendingPsycho=False, briefTrialUpdate=False, printInter
     
 def createNoise(proportnNoise,win,fieldWidthPix,noiseColor): 
     #noiseColor, assumes that colorSpace='rgb', triple between -1 and 1
+    #Creates proportnNoise*area dots, in random positions, with color noiseColor (black)
     numDots = int(proportnNoise*fieldWidthPix*fieldWidthPix)
     if numDots ==0:
         return None
