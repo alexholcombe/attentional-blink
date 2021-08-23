@@ -1,8 +1,6 @@
 Attentional Blink implemented with [Psychopy](https://github.com/psychopy/psychopy)
 ============================
-Licensing: MIT license, like CC-BY for code which means do whatever you want with it, with an attribution to the author.
-
-Jan 2012 started implementing attentional blink task. Started git repository on 5 November 2014 with non-git AB_addNoise_QUEST2.py
+MIT license, like CC-BY for code which means do whatever you want with it, with an attribution to the author.
 
 Main version **AB.py** includes optional noise staircase, finding noise level to titrate T1 approx correct to a particular level.
 
@@ -44,3 +42,7 @@ Summary of results are printed in output window.
 ######Staircase piloting notes
 Alex with glasses off to simulate elderly, targeted 90% correct with staircase.
 Started with 20 trials of noise= [ 2  2  5  5 10 80 80 80  2  2  5  5 10 80 80 80] then a max 20-trial staircase followed by 25 trials at that noise level. Yielded 85% approx correct for T1.
+
+#######History
+
+Jan 2012 started implementing attentional blink task. Started git repository on 5 November 2014 with non-git AB_addNoise_QUEST2.py

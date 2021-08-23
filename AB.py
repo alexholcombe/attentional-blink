@@ -1,6 +1,5 @@
 #Alex Holcombe alex.holcombe@sydney.edu.au
-#See the README.md for more information: https://github.com/alexholcombe/attentional-blink/blob/master/README.md
-#git remote add origin https://github.com/alexholcombe/attentional-blink.git
+#See the README.md for more information: https://github.com/alexholcombe/attentional-blink
 from psychopy import monitors, visual, event, data, logging, core, sound, gui
 import psychopy.info
 import numpy as np
@@ -22,8 +21,8 @@ tasks=['T1','T1T2']; task = tasks[1]
 #same screen or external screen? Set scrn=0 if one screen. scrn=1 means display stimulus on second screen.
 #widthPix, heightPix
 quitFinder = False #if checkRefreshEtc, quitFinder becomes True
-autopilot=False
-demo=True #False
+autopilot=False #not working?
+demo=False #False
 exportImages= False #quits after one trial
 subject='Hubert' #user is prompted to enter true subject name
 if autopilot: subject='auto'
@@ -478,6 +477,7 @@ def do_RSVP_stim(cue1pos, cue2lag, proportnNoise,trialN):
     #end preparation of stimuli
     
     core.wait(.1);
+    framesSaved=0
     trialClock.reset()
     fixatnPeriodMin = 0.3
     fixatnPeriodFrames = int(   (np.random.rand(1)/2.+fixatnPeriodMin)   *refreshRate)  #random interval between 800ms and 1.3s (changed when Fahed ran outer ring ident)
