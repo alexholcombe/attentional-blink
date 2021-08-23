@@ -1,7 +1,6 @@
 #Alex Holcombe alex.holcombe@sydney.edu.au
 #See the README.md for more information: https://github.com/alexholcombe/attentional-blink/blob/master/README.md
 #git remote add origin https://github.com/alexholcombe/attentional-blink.git
-from __future__ import print_function
 from psychopy import monitors, visual, event, data, logging, core, sound, gui
 import psychopy.info
 import numpy as np
@@ -24,7 +23,7 @@ tasks=['T1','T1T2']; task = tasks[1]
 #widthPix, heightPix
 quitFinder = False #if checkRefreshEtc, quitFinder becomes True
 autopilot=False
-demo=False #False
+demo=True #False
 exportImages= False #quits after one trial
 subject='Hubert' #user is prompted to enter true subject name
 if autopilot: subject='auto'
@@ -55,7 +54,7 @@ heightPix= 800 #800 #monitor height in pixels
 monitorwidth = 38.7 #monitor width in cm
 scrn=0 #0 to use main screen, 1 to use external screen connected to computer
 fullscr=False #True to use fullscreen, False to not. Timing probably won't be quite right if fullscreen = False
-allowGUI = False
+allowGUI=False #don't show mouse pointer etc.
 if demo: monitorwidth = 23#18.0
 if exportImages:
     widthPix = 400; heightPix = 400
@@ -197,7 +196,7 @@ if checkRefreshEtc and (not demo) and (myWinRes != [widthPix,heightPix]).any():
     myDlg.addText(msgWrongResolution, color='Red')
     logging.error(msgWrongResolution)
     print(msgWrongResolution)
-myDlg.addText('Note: to abort press ESC at a trials response screen', color=[-1.,1.,-1.]) # color='DimGrey') color names stopped working along the way, for unknown reason
+myDlg.addText('Note: to abort press ESC at a trials response screen',  color='DimGrey')
 myDlg.show()
 
 if myDlg.OK: #unpack information from dialogue box
@@ -276,7 +275,7 @@ if showRefreshMisses:
 else: fixSizePix = 32
 fixColor = [1,1,1]
 if exportImages: fixColor= [0,0,0]
-fixatnNoiseTexture = np.round( np.random.rand(fixSizePix/4,fixSizePix/4) ,0 )   *2.0-1 #Can counterphase flicker  noise texture to create salient flicker if you break fixation
+fixatnNoiseTexture = np.round( np.random.rand(int(fixSizePix/4),int(fixSizePix/4)) ,0 )   *2.0-1 #Can counterphase flicker  noise texture to create salient flicker if you break fixation
 
 fixation= visual.PatchStim(myWin, tex=fixatnNoiseTexture, size=(fixSizePix,fixSizePix), units='pix', mask='circle', interpolate=False, autoLog=False)
 fixationBlank= visual.PatchStim(myWin, tex= -1*fixatnNoiseTexture, size=(fixSizePix,fixSizePix), units='pix', mask='circle', interpolate=False, autoLog=False) #reverse contrast
